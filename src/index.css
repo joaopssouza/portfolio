@@ -1,0 +1,165 @@
+/* ========== Reset básico ========== */
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+/* === Tema DARK (padrão - baseado na imagem) === */
+:root {
+  /* fundos */
+  --bg: #0d1117;          /* Azul-escuro do fundo da imagem */
+  --surface: #161b22;     /* Tom ligeiramente mais claro para cards */
+  --border: #30363d;      /* Cinza-azulado para bordas */
+
+  /* textos */
+  --text: #c9d1d9;        /* Branco-acinzentado dos números */
+  --muted: #8b949e;       /* Cinza-azulado do texto secundário */
+
+  /* acentos */
+  --primary: #58a6ff;     /* Azul claro do título "Estatísticas..." */
+  --primary-600: #388bfd; /* Azul mais escuro para hover */
+  --accent: #a371f7;      /* Lilás/Roxo dos ícones */
+  --shadow: 0 10px 30px rgba(0, 0, 0, 0.3); /* Sombra escura e sutil */
+
+  /* vidro */
+  --glass: rgba(88, 166, 255, 0.07);
+}
+
+/* === Tema LIGHT (complementar) === */
+html[data-theme="light"] {
+  --bg: #f6f8fa;
+  --surface: #ffffff;
+  --border: #d0d7de;
+  --text: #24292f;
+  --muted: #57606a;
+  --primary: #0969da;
+  --primary-600: #0a5cc9;
+  --accent: #8250df;
+  --shadow: 0 12px 36px rgba(9, 105, 218, .1);
+  --glass: rgba(208, 215, 222, 0.45);
+}
+
+/* ========== Base ========== */
+html, body {
+  height: 100%;
+  background: var(--bg);
+  color: var(--text);
+  font: 400 16px/1.65 "Inter", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+.container {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+/* ===== Cabeçalho fixo ===== */
+.site-header {
+  position: sticky; top: 0; z-index: 10;
+  border-bottom: 1px solid var(--border);
+  background-color: rgba(13, 17, 23, 0.8);
+  backdrop-filter: blur(10px);
+}
+html[data-theme="light"] .site-header {
+  background-color: rgba(246, 248, 250, 0.8);
+}
+
+.header-wrap {
+  display: flex; align-items: center; justify-content: space-between;
+  min-height: 64px; gap: 16px;
+}
+.logo { font-weight: 700; letter-spacing: .3px; }
+.nav { display: flex; gap: 14px; flex-wrap: wrap; }
+.nav a {
+  color: var(--muted); text-decoration: none; padding: 8px 10px; border-radius: 8px;
+  transition: color .2s ease;
+}
+.nav a:hover { color: var(--primary); }
+
+/* Botões */
+.btn {
+  display: inline-block; border: 1px solid var(--border); cursor: pointer;
+  background: var(--surface);
+  color: var(--primary);
+  padding: 10px 16px; border-radius: 8px; font-weight: 600;
+  transition: all .2s ease;
+}
+.btn:hover {
+  transform: translateY(-2px);
+  border-color: var(--primary);
+  box-shadow: 0 4px 12px rgba(88, 166, 255, 0.1);
+}
+.btn-outline {
+  background: transparent;
+  border-color: var(--primary);
+}
+.btn-outline:hover {
+  background: var(--glass);
+}
+
+
+/* ===== Seções com respiro ===== */
+.section { padding: 80px 0; border-bottom: 1px solid var(--border); }
+.section:last-of-type { border-bottom: none; }
+.section h2 { font-size: 2rem; margin-bottom: 16px; letter-spacing: -0.5px; color: var(--primary); }
+.muted { color: var(--muted); }
+
+/* ===== Sobre: imagem + texto lado a lado ===== */
+.sobre-conteudo {
+  display: flex; align-items: center; gap: 32px;
+  margin-top: 24px;
+}
+.profile-img {
+  width: 200px; height: 200px; border-radius: 50%; object-fit: cover;
+  flex-shrink: 0;
+  border: 2px solid var(--border);
+  box-shadow: 0 0 25px rgba(88, 166, 255, 0.1);
+}
+.sobre-texto p { margin-bottom: 14px; color: var(--muted); max-width: 60ch; }
+.sobre-texto strong { color: var(--text); font-weight: 600; }
+
+@media (max-width: 768px) {
+  .sobre-conteudo { flex-direction: column; text-align: center; }
+}
+
+/* ===== Cards de projetos (grid) ===== */
+.cards-grid {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 24px; margin-top: 24px;
+}
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden; display: flex; flex-direction: column;
+  box-shadow: var(--shadow);
+  transition: transform .2s ease, border-color .25s ease;
+}
+.card:hover {
+  transform: translateY(-6px);
+  border-color: var(--accent);
+}
+.card-img { width: 100%; height: 180px; object-fit: cover; display: block; }
+.card-body { padding: 20px; display: flex; flex-direction: column; flex-grow: 1; gap: 10px; }
+.card-title { font-size: 1.2rem; color: var(--text); }
+.card-text { color: var(--muted); flex-grow: 1; }
+.card-actions { margin-top: 12px; display: flex; gap: 12px; flex-wrap: wrap; }
+
+/* ===== Rodapé ===== */
+.site-footer { padding: 64px 0 32px; text-align: center; }
+.contact-list {
+  list-style: none; display: flex; gap: 24px;
+  flex-wrap: wrap; margin-bottom: 24px; justify-content: center;
+}
+.contact-list a { color: var(--muted); text-decoration: none; font-weight: 500; }
+.contact-list a:hover { color: var(--primary); text-decoration: underline; }
+.copy { color: var(--muted); font-size: 0.9rem; }
+
+/* ===== Formulário & Modal ===== */
+.form, .modal {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+.field input, .field textarea {
+  background: var(--bg);
+  border: 1px solid var(--border);
+}
