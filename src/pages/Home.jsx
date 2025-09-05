@@ -17,16 +17,16 @@ const Home = () => {
             <div className="sobre-conteudo">
               <img
                 src="https://avatars.githubusercontent.com/u/119147905?v=4"
-                alt="Foto de João Paulo Souza"
+                alt="Foto de João Paulo"
                 className="profile-img"
               />
               <div className="sobre-texto">
                 <p>
-                  Olá! Sou o <strong>João Paulo Souza</strong>, desenvolvedor Full Stack apaixonado por tecnologia, educação e projetos open source.
+                  Olá! Sou o <strong>João Paulo</strong>, Mineiro apaixonado por tecnologia e desenvolvimento web, Tenho experiência com HTML, CSS e JavaScript. Estou cursando Superior em Engenharia de Software e Técnico de Informática para Internet.
                 </p>
                 <p>
-                  Trabalho principalmente com <strong>Node.js</strong>, <strong>React</strong> e <strong>TypeScript</strong>. Sempre buscando novos conhecimentos para aprimorar minhas habilidades e contribuir em projetos desafiadores.
-                </p>
+                  Acredito que a gente lida com a vida de forma lógica. Fora do código, gosto de corrida de rua, cultura POP e conhecer novas culturas — cada experiência me torna um desenvolvedor mais criativo.
+                 </p>
               </div>
             </div>
           </div>

@@ -21,7 +21,7 @@ const ProjectDetail = () => {
     <>
       <header className="site-header">
         <div className="container header-wrap">
-          <h1 className="logo">João Paulo Souza</h1>
+          <h1 className="logo">João Paulo</h1>
           <nav className="nav">
             <Link to="/#projetos">← Voltar</Link>
           </nav>
