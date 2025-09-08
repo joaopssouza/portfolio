@@ -22,7 +22,7 @@ const Home = () => {
               />
               <div className="sobre-texto">
                 <p>
-                  Olá! Sou o <strong>João Paulo</strong>, Mineiro apaixonado por tecnologia e desenvolvimento web, Tenho experiência com HTML, CSS e JavaScript. Estou cursando Superior em Engenharia de Software e Técnico de Informática para Internet.
+                  Olá! Sou o <strong>João Paulo</strong>, Mineiro apaixonado por tecnologia e desenvolvimento web, Tenho experiência com HTML, CSS e JavaScript, React, GO. Estou cursando Superior em Engenharia de Software e Técnico de Informática para Internet.
                 </p>
                 <p>
                   Acredito que a gente lida com a vida de forma lógica. Fora do código, gosto de corrida de rua, cultura POP e conhecer novas culturas — cada experiência me torna um desenvolvedor mais criativo.

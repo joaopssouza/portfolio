@@ -1,12 +1,41 @@
-# React + Vite
+# Portfólio Pessoal 💼
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Um site moderno e responsivo desenvolvido em **React + Vite**, criado para apresentar minhas **habilidades**, **trajetória** e **projetos** de forma profissional.  
 
-Currently, two official plugins are available:
+---
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## 🔎 Descrição
 
-## Expanding the ESLint configuration
+O meu **Portfólio** foi projetado como um cartão de visita digital.  
+Ele oferece navegação intuitiva e destaca minha identidade profissional com seções bem definidas:
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+- **Início (Home)** → Apresentação e resumo pessoal  
+- **Projetos** → Lista dinâmica dos meus trabalhos, carregada a partir de `src/data/projects.js`  
+- **Detalhes de Projeto** → Página dedicada com mais informações de cada projeto  
+- **Contato** → Links para minhas redes e formas de contato direto  
+
+Além disso, inclui:
+- **Tema claro/escuro** com alternância via componente `ThemeToggle`  
+- **Design modular** com componentes reutilizáveis (`Header`, `Footer`, `ProjectCard`, etc.)  
+- **Layout responsivo**, adaptado para desktop e mobile  
+
+---
+
+### 📄 Tecnologias Utilizadas
+
+- **React (Vite)** – SPA performática e modular  
+- **JavaScript (ES6+)** – Lógica da aplicação  
+- **CSS3** – Estilização global e responsiva  
+- **Componentes Reutilizáveis** – Construção de UI dinâmica  
+- **Modo Dark/Light** – Alternância de tema integrada  
+
+⚙️ **Fácil manutenção e escalabilidade**  
+_O conteúdo dos projetos é centralizado em `src/data/projects.js`, o que facilita a atualização._  
+
+---
+
+## 🌐 Preview Online
+
+🔗 [Acesse meu portfólio aqui](https://seu-link-do-portfolio.com)  
+
+---

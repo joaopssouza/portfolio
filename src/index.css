@@ -1,3 +1,4 @@
+/* src/index.css */
 /* ========== Reset básico ========== */
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -55,11 +56,12 @@ html, body {
 .site-header {
   position: sticky; top: 0; z-index: 10;
   border-bottom: 1px solid var(--border);
-  background-color: rgba(13, 17, 23, 0.8);
-  backdrop-filter: blur(10px);
+  background-color: rgba(13, 17, 23, 0.6);
+  backdrop-filter: blur(6px);
+  background: linear-gradient(180deg,var(--glass),transparent);
 }
 html[data-theme="light"] .site-header {
-  background-color: rgba(246, 248, 250, 0.8);
+  background-color: rgba(246, 248, 250, 0.6);
 }
 
 .header-wrap {
@@ -81,6 +83,7 @@ html[data-theme="light"] .site-header {
   color: var(--primary);
   padding: 10px 16px; border-radius: 8px; font-weight: 600;
   transition: all .2s ease;
+  text-decoration: none;
 }
 .btn:hover {
   transform: translateY(-2px);
@@ -137,7 +140,9 @@ html[data-theme="light"] .site-header {
   transform: translateY(-6px);
   border-color: var(--accent);
 }
-.card-img { width: 100%; height: 180px; object-fit: cover; display: block; }
+.card-img {  width: 100%; height: 215px; object-fit: contain; display: block; background-color: var(--surface); border-radius: 12px; }
+.card-miniature  { width: 100%; height: 215px; object-fit: cover; display: block; object-position: top;}
+.card-video { width: 100%;  max-height: 215px; height: 100%; background: var(--muted); display: flex; align-items: center; justify-content: center; color: var(--surface); font-size: 3rem; }
 .card-body { padding: 20px; display: flex; flex-direction: column; flex-grow: 1; gap: 10px; }
 .card-title { font-size: 1.2rem; color: var(--text); }
 .card-text { color: var(--muted); flex-grow: 1; }
@@ -162,4 +167,159 @@ html[data-theme="light"] .site-header {
 .field input, .field textarea {
   background: var(--bg);
   border: 1px solid var(--border);
+}
+
+/* ===== Modal ===== */
+.modal-overlay {
+  position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0, 0, 0, 0.75);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 1000;
+  backdrop-filter: blur(2px);
+}
+
+.modal-content {
+  background: var(--surface);
+  padding: 15px;
+  border-radius: 12px;
+  max-width: 85vw;
+  max-height: 85vh;
+  position: relative;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+}
+
+.modal-content img {
+  display: block;
+  max-width: 100%;
+  max-height: calc(85vh - 30px); /* Ajusta a altura máxima para caber no modal */
+  object-fit: contain;
+}
+
+.modal-close {
+  position: absolute; top: 10px; right: 15px;
+  background: none; border: none;
+  color: var(--text); font-size: 2rem;
+  cursor: pointer; line-height: 1;
+  z-index: 1010;
+}
+
+.card-img-container {
+    position: relative;
+    cursor: pointer;
+    height: 215px;
+}
+
+/* Container para a imagem com zoom */
+.image-zoom-container {
+  position: relative;
+  cursor: crosshair;
+}
+
+/* Estilo da Lupa (Magnifying Glass) */
+.magnifying-glass {
+  position: absolute;
+  border: 3px solid var(--primary);
+  border-radius: 50%; /* Deixa a lupa redonda */
+  background-repeat: no-repeat;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+  
+  /* Impede que a lupa intercepte os eventos do mouse, 
+     para que o movimento sobre a imagem continue sendo detectado */
+  pointer-events: none; 
+}
+
+.card-img-container .overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 215px;
+    background: rgba(0, 0, 0, 0.5);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    font-size: 2rem;
+}
+
+.card-img-container:hover .overlay {
+    opacity: 1;
+}
+
+/* Adicione ao final de src/index.css */
+
+.card-media-container {
+    position: relative;
+    cursor: pointer;
+    height: 215px;
+    background-color: var(--surface);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    border-radius: 12px;
+}
+
+.card-media-container .overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    font-size: 2rem;
+}
+
+.card-media-container:hover .overlay {
+    opacity: 1;
+}
+
+.overlay.play-icon span {
+    font-size: 3rem;
+}
+
+.modal-video {
+  display: block;
+  max-width: 100%;
+  max-height: calc(85vh - 30px);
+  object-fit: contain;
+}
+
+/* Adicione ao final de src/index.css */
+
+.modal-nav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(0, 0, 0, 0.4);
+  color: white;
+  border: none;
+  font-size: 2rem;
+  cursor: pointer;
+  padding: 16px 12px;
+  z-index: 1010;
+  transition: background .2s ease;
+  line-height: 1;
+}
+
+.modal-nav:hover {
+  background: rgba(0, 0, 0, 0.7);
+}
+
+.modal-nav.prev {
+  left: 15px;
+  border-radius: 8px 0 0 8px;
+}
+
+.modal-nav.next {
+  right: 15px;
+  border-radius: 0 8px 8px 0;
 }
