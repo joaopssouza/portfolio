@@ -3,6 +3,8 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import ThemeToggle from '../components/ThemeToggle.jsx';
 import Modal from '../components/Modal.jsx';
+import Footer from '../components/Footer.jsx';
+
 
 const ProjectDetail = () => {
   const { id } = useParams();
@@ -126,7 +128,7 @@ const ProjectDetail = () => {
           <div className="container">
             <h2>{project.title}</h2>
             <p className="muted" dangerouslySetInnerHTML={{ __html: project.details.fullDescription }}></p>
-            <div className="cards-grid" style={{ marginTop: '24px' }}>
+            <div className="cards-grid" id="card-detail" style={{ marginTop: '24px' }}>
               {media.map((item, index) => (
                 <div key={index} className="card-media-container" onClick={() => openModal(index)}>
                   {item.type === 'image' ? (
@@ -148,6 +150,7 @@ const ProjectDetail = () => {
           </div>
         </section>
       </main>
+      <Footer />
       {isModalOpen && <Modal isOpen={isModalOpen} onClose={closeModal} media={currentMedia} onNext={goToNext} onPrevious={goToPrevious} hasNext={currentIndex < media.length - 1} hasPrevious={currentIndex > 0} />}
     </>
   );

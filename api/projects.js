@@ -29,6 +29,17 @@ async function connectToDatabase() {
 }
 
 export default async function handler(req, res) {
+  // --- INÍCIO DO BLOCO DE SEGURANÇA ---
+  // Em ambiente de produção, verificamos de onde veio a requisição
+  if (process.env.NODE_ENV === 'production') {
+    const secFetchSite = req.headers['sec-fetch-site'];
+    // Se o header não for 'same-origin', bloqueamos o acesso.
+    if (secFetchSite !== 'same-origin') {
+      return res.status(403).json({ error: 'Acesso proibido' });
+    }
+  }
+  // --- FIM DO BLOCO DE SEGURANÇA ---
+
   try {
     const { db } = await connectToDatabase();
     const projects = await db.collection("projects").find({}).toArray();

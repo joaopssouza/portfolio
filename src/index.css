@@ -329,3 +329,9 @@ html[data-theme="light"] .site-header {
   /* Ajuste 350px conforme a altura aproximada de um card + espaçamento */
   min-height: 350px; 
 }
+
+#card-detail {
+  /* Define uma altura mínima baseada em uma fileira de cards */
+  /* Ajuste 304px conforme a altura aproximada de um card + espaçamento */
+  min-height: 304px; 
+}
