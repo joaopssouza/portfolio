@@ -1,11 +1,19 @@
 // src/pages/Home.jsx
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Header from '../components/Header.jsx';
 import ProjectCard from '../components/ProjectCard.jsx';
 import Footer from '../components/Footer.jsx';
-import { projects } from '../data/projects.js';
 
 const Home = () => {
+  const [projects, setProjects] = useState([]);
+
+  useEffect(() => {
+    // Busca os projetos da nossa nova API
+    fetch('/api/projects')
+      .then(res => res.json())
+      .then(data => setProjects(data))
+      .catch(err => console.error("Failed to fetch projects:", err));
+  }, []);
   return (
     <>
       <Header />

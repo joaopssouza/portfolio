@@ -29,7 +29,6 @@ const Modal = ({ isOpen, onClose, media, onNext, onPrevious, hasNext, hasPreviou
     }
   };
   
-  // Reseta as dimensões da imagem quando a mídia muda para evitar bugs
   useEffect(() => {
     setImgDimensions({ naturalWidth: 0, naturalHeight: 0, displayWidth: 0, displayHeight: 0 });
   }, [media]);
@@ -46,6 +45,26 @@ const Modal = ({ isOpen, onClose, media, onNext, onPrevious, hasNext, hasPreviou
   const handleMouseEnter = () => setShowMagnifier(true);
   const handleMouseLeave = () => setShowMagnifier(false);
 
+  // Função para otimizar a URL da mídia para o Modal
+  const getOptimizedMediaUrl = (url, type) => {
+    if (!url || !url.includes('cloudinary')) return url;
+    
+    // Transformações para imagens em alta resolução (largura, qualidade e formato)
+    const imageTransformations = 'w_1600,q_auto,f_auto';
+    // Transformações para vídeos (qualidade e formato)
+    const videoTransformations = 'q_auto,f_auto';
+
+    if (type === 'image') {
+      return url.replace('/upload/', `/upload/${imageTransformations}/`);
+    }
+    if (type === 'video') {
+        return url.replace('/upload/', `/upload/${videoTransformations}/`);
+    }
+    return url;
+  };
+
+  const optimizedUrl = getOptimizedMediaUrl(media?.url, media?.type);
+
   const backgroundX = -((mousePosition.x / imgDimensions.displayWidth) * imgDimensions.naturalWidth * zoomFactor - magnifierSize / 2);
   const backgroundY = -((mousePosition.y / imgDimensions.displayHeight) * imgDimensions.naturalHeight * zoomFactor - magnifierSize / 2);
 
@@ -54,7 +73,7 @@ const Modal = ({ isOpen, onClose, media, onNext, onPrevious, hasNext, hasPreviou
     left: `${mousePosition.x - magnifierSize / 2}px`,
     width: `${magnifierSize}px`,
     height: `${magnifierSize}px`,
-    backgroundImage: `url(${media?.url})`,
+    backgroundImage: `url(${optimizedUrl})`,
     backgroundSize: `${imgDimensions.naturalWidth * zoomFactor}px ${imgDimensions.naturalHeight * zoomFactor}px`,
     backgroundPosition: `${backgroundX}px ${backgroundY}px`,
     display: showMagnifier && imgDimensions.naturalWidth > 0 ? 'block' : 'none',
@@ -80,7 +99,7 @@ const Modal = ({ isOpen, onClose, media, onNext, onPrevious, hasNext, hasPreviou
           >
             <img
               ref={imageRef}
-              src={media.url}
+              src={optimizedUrl}
               alt="Visualização ampliada"
               onLoad={handleImageLoad}
             />
@@ -89,7 +108,7 @@ const Modal = ({ isOpen, onClose, media, onNext, onPrevious, hasNext, hasPreviou
         )}
         
         {media?.type === 'video' && (
-          <video key={media.url} className="modal-video" src={media.url} controls autoPlay />
+          <video key={optimizedUrl} className="modal-video" src={optimizedUrl} controls autoPlay />
         )}
       </div>
 

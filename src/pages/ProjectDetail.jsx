@@ -1,13 +1,14 @@
 // src/pages/ProjectDetail.jsx
 import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { projects } from '../data/projects.js';
 import ThemeToggle from '../components/ThemeToggle.jsx';
 import Modal from '../components/Modal.jsx';
 
 const ProjectDetail = () => {
   const { id } = useParams();
-  const project = projects.find(p => p.id === id);
+  // Este 'projects' viria da sua API no futuro
+  const [projectsData, setProjectsData] = useState(projects);
+  const project = projectsData.find(p => p.id === id);
 
   // Combina imagens e vídeos em uma única lista de mídias
   const media = useMemo(() => {
@@ -40,8 +41,7 @@ const ProjectDetail = () => {
       setCurrentIndex(currentIndex - 1);
     }
   };
-  
-  // Efeito para escutar eventos do teclado (setas)
+
   useEffect(() => {
     const handleKeyDown = (event) => {
       if (!isModalOpen) return;
@@ -57,6 +57,24 @@ const ProjectDetail = () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
   }, [isModalOpen, currentIndex]);
+
+  // Função para otimizar as URLs de mídia do Cloudinary
+  const getOptimizedMediaUrl = (url, type) => {
+    if (!url || !url.includes('cloudinary')) return url;
+    
+    // Transformações para imagens (largura, qualidade e formato automáticos)
+    const imageTransformations = 'w_600,q_auto,f_auto';
+    // Transformações para vídeos (qualidade e formato automáticos)
+    const videoTransformations = 'q_auto,f_auto';
+
+    if (type === 'image') {
+      return url.replace('/upload/', `/upload/${imageTransformations}/`);
+    }
+    if (type === 'video') {
+      return url.replace('/upload/', `/upload/${videoTransformations}/`);
+    }
+    return url;
+  };
 
 
   if (!project) {
@@ -91,9 +109,9 @@ const ProjectDetail = () => {
               {media.map((item, index) => (
                 <div key={index} className="card-media-container" onClick={() => openModal(index)}>
                   {item.type === 'image' ? (
-                    <img className="card-img" src={item.url} alt={`Mídia ${index + 1} do projeto`} />
+                    <img className="card-img" src={getOptimizedMediaUrl(item.url, 'image')} alt={`Mídia ${index + 1} do projeto`} />
                   ) : (
-                    <video className="card-video" src={item.url}></video>
+                    <video className="card-video" src={getOptimizedMediaUrl(item.url, 'video')}></video>
                   )}
                   <div className="overlay">
                     <span>{item.type === 'image' ? '🔎' : '▶'}</span>
