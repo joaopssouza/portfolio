@@ -13,7 +13,7 @@ const ProjectDetail = () => {
 
   useEffect(() => {
     // Busca todos os projetos da API
-    fetch('/api/projects')
+    fetch('/api/projects.json')
       .then(res => res.json())
       .then(allProjects => {
         // Encontra o projeto específico pelo ID da URL
