@@ -9,7 +9,7 @@ const Home = () => {
 
   useEffect(() => {
     // Busca os projetos da nossa nova API
-    fetch('/api/projects.json')
+    fetch('/api/projects')
       .then(res => res.json())
       .then(data => setProjects(data))
       .catch(err => console.error("Failed to fetch projects:", err));
