@@ -1,0 +1,5 @@
+# Instrução para todos os robôs de busca
+User-agent: *
+
+# Não visite nenhuma página do site, a começar pela raiz (/)
+Disallow: /

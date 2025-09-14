@@ -24,7 +24,7 @@ const Home = () => {
             <h2>Sobre mim</h2>
             <div className="sobre-conteudo">
               <img
-                src="https://avatars.githubusercontent.com/u/119147905?v=4"
+                src="https://res.cloudinary.com/dhqdkgtee/image/upload/w_200,q_auto,f_auto/v1757854155/119147905_jmprxw.jpg"
                 alt="Foto de João Paulo"
                 className="profile-img"
               />
@@ -45,8 +45,8 @@ const Home = () => {
           <div className="container">
             <h2>Projetos</h2>
             <div className="cards-grid">
-              {projects.map(project => (
-                <ProjectCard key={project.id} project={project} />
+              {projects.map((project, index) => (
+                <ProjectCard key={project.id} project={project} isLCP={index === 0}/>
               ))}
             </div>
           </div>

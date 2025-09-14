@@ -323,3 +323,9 @@ html[data-theme="light"] .site-header {
   right: 15px;
   border-radius: 0 8px 8px 0;
 }
+
+.cards-grid {
+  /* Define uma altura mínima baseada em uma fileira de cards */
+  /* Ajuste 350px conforme a altura aproximada de um card + espaçamento */
+  min-height: 350px; 
+}
