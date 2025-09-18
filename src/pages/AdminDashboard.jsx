@@ -27,7 +27,7 @@ const AdminDashboard = () => {
 
   const fetchProjects = () => {
     setIsLoading(true);
-    fetch('/api/projects.json')
+    fetch('/api/projects')
       .then(res => res.json())
       .then(data => {
         setProjects(data); // A API já está retornando ordenado
