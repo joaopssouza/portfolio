@@ -18,16 +18,26 @@ const ProjectCard = ({ project, isLCP }) => {
 
   const optimizedImageUrl = getOptimizedImageUrl(project.imageUrl);
 
+  // Função para formatar a data
+  const formattedDate = new Date(project.publicationDate).toLocaleDateString('pt-BR', {
+    day: '2-digit',
+    month: 'long',
+    year: 'numeric',
+  });
+
   return (
     <article className="card">
       {/* Usamos a nova URL otimizada */}
       <Link to={project.projectUrl}>
         <div className="card-media-container">
-          <img src={optimizedImageUrl} alt={`Prévia ${project.title}`} fetchpriority={isLCP ? "high" : "auto"} className="card-miniature" />
+          <img src={optimizedImageUrl} alt={`Prévia ${project.title}`} fetchPriority={isLCP ? "high" : "auto"} className="card-miniature" />
         </div>
       </Link>
       <div className="card-body">
-        <h3 className="card-title">{project.title}</h3>
+        <div className="card-header">
+          <h3 className="card-title">{project.title}</h3>
+        </div>
+      {project.publicationDate && <time className="card-date">{formattedDate}</time>}
         <p className="card-text">{project.description}</p>
         <div className="card-actions">
           <Link className="btn" to={project.projectUrl}>Ver página</Link>

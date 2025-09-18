@@ -12,9 +12,13 @@ const Home = () => {
 
   useEffect(() => {
     // Busca os projetos da nossa nova API
-    fetch('/api/projects')
+    fetch('/api/projects.json')
       .then(res => res.json())
-      .then(data => setProjects(data))
+      .then(data => {
+        // Ordena os projetos pela data de publicação, do mais recente para o mais antigo
+        const sortedProjects = data.sort((a, b) => new Date(b.publicationDate) - new Date(a.publicationDate));
+        setProjects(sortedProjects);
+      })
       .catch(err => console.error("Failed to fetch projects:", err));
   }, []);
   // 3. Lógica da paginação

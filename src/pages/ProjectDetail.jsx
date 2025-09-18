@@ -13,7 +13,7 @@ const ProjectDetail = () => {
 
   useEffect(() => {
     // Busca todos os projetos da API
-    fetch('/api/projects')
+    fetch('/api/projects.json')
       .then(res => res.json())
       .then(allProjects => {
         // Encontra o projeto específico pelo ID da URL
@@ -109,6 +109,12 @@ const ProjectDetail = () => {
     );
   }
 
+  const formattedDate = new Date(project.publicationDate).toLocaleDateString('pt-BR', {
+    day: '2-digit',
+    month: 'long',
+    year: 'numeric',
+  });
+
   const currentMedia = media[currentIndex];
 
   // 3. Se tudo correu bem, renderiza a página do projeto
@@ -126,7 +132,10 @@ const ProjectDetail = () => {
       <main>
         <section className="section">
           <div className="container">
-            <h2>{project.title}</h2>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+              <h2>{project.title}</h2>
+              {project.publicationDate && <time className="card-date" style={{ fontSize: '1rem', marginTop: '10px' }}>{formattedDate}</time>}
+            </div>
             <p className="muted" dangerouslySetInnerHTML={{ __html: project.details.fullDescription }}></p>
             <div className="cards-grid" id="card-detail" style={{ marginTop: '24px' }}>
               {media.map((item, index) => (

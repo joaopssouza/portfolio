@@ -144,8 +144,8 @@ html[data-theme="light"] .site-header {
 .card-miniature  { width: 100%; height: 215px; object-fit: cover; display: block; object-position: top;}
 .card-video { width: 100%;  max-height: 215px; height: 100%; background: var(--muted); display: flex; align-items: center; justify-content: center; color: var(--surface); font-size: 3rem; }
 .card-body { padding: 20px; display: flex; flex-direction: column; flex-grow: 1; gap: 10px; }
-.card-title { font-size: 1.2rem; color: var(--text); }
-.card-text { color: var(--muted); flex-grow: 1; }
+.card-title { font-size: 1.2rem; color: var(--text); margin: 0px;}
+.card-text { color: var(--muted); flex-grow: 1; text-align: justify;}
 .card-actions { margin-top: 12px; display: flex; gap: 12px; flex-wrap: wrap; }
 
 /* ===== Rodapé ===== */
@@ -377,4 +377,27 @@ html[data-theme="light"] .site-header {
   background: var(--primary);
   border-color: var(--primary);
   color: var(--bg); /* Cor do texto que contrasta com o fundo primário */
+}
+
+/* Adicione estas novas regras ao final do seu arquivo src/index.css */
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.card-title {
+  font-size: 1.2rem;
+  color: var(--text);
+  margin-bottom: 0; /* Remove a margem que estava no título */
+}
+
+.card-date {
+  font-size: 0.8rem;
+  color: var(--muted);
+  font-weight: 500;
+  flex-shrink: 0; /* Impede que a data quebre linha facilmente */
+  text-align: right;
 }
