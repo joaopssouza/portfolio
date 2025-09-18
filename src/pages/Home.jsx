@@ -12,7 +12,7 @@ const Home = () => {
 
   useEffect(() => {
     // Busca os projetos da nossa nova API
-    fetch('/api/projects')
+    fetch('/api/projects.json')
       .then(res => res.json())
       .then(data => {
         // Ordena os projetos pela data de publicação, do mais recente para o mais antigo
