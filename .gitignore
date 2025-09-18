@@ -12,7 +12,7 @@ node_modules
 dist
 dist-ssr
 *.local
-
+api/projects.json
 server.js
 
 # Editor directories and files
