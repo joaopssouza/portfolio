@@ -49,10 +49,12 @@ export default async function handler(req, res) {
   }
 
   // Usamos um truque para rodar o middleware do Multer em uma função serverless
-  uploadMiddleware(req, res, async (err) => {
-    if (err) {
-      return res.status(500).json({ error: 'Falha no processamento do upload.', details: err.message });
-    }
+    uploadMiddleware(req, res, async (err) => {
+      console.log('req.files:', req.files); // <-- Adicione este log
+      console.log('Cloudinary ENV:', process.env.CLOUDINARY_CLOUD_NAME, process.env.CLOUDINARY_API_KEY); // <-- Adicione este log
+      if (err) {
+        return res.status(500).json({ error: 'Falha no processamento do upload.', details: err.message });
+      }
 
     try {
       if (!req.files || req.files.length === 0) {
