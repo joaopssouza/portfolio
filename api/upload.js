@@ -55,12 +55,13 @@ export default async function handler(req, res) {
     }
 
     try {
+      if (!req.files || req.files.length === 0) {
+        return res.status(400).json({ error: 'Nenhum arquivo enviado.' });
+      }
       const uploadPromises = req.files.map(file => streamUpload(file.buffer));
       const results = await Promise.all(uploadPromises);
-      
       // Retornamos as URLs seguras dos arquivos que foram enviados
       const urls = results.map(result => result.secure_url);
-      
       res.status(200).json({ success: true, urls });
     } catch (e) {
       console.error('Erro ao fazer upload para o Cloudinary:', e);
