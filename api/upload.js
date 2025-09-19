@@ -43,31 +43,48 @@ const streamUpload = (buffer) => {
   });
 };
 
+// ...existing code...
 export default async function handler(req, res) {
+  // Verificar método
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Método não permitido.' });
   }
 
-  // Usamos um truque para rodar o middleware do Multer em uma função serverless
-    uploadMiddleware(req, res, async (err) => {
-      console.log('req.files:', req.files); // <-- Adicione este log
-      console.log('Cloudinary ENV:', process.env.CLOUDINARY_CLOUD_NAME, process.env.CLOUDINARY_API_KEY); // <-- Adicione este log
-      if (err) {
-        return res.status(500).json({ error: 'Falha no processamento do upload.', details: err.message });
-      }
+  // Verificar configuração do Cloudinary
+  if (!process.env.CLOUDINARY_CLOUD_NAME || !process.env.CLOUDINARY_API_KEY || !process.env.CLOUDINARY_API_SECRET) {
+    console.error('Configuração do Cloudinary ausente');
+    return res.status(500).json({ error: 'Erro de configuração do servidor' });
+  }
+
+  // Processar upload
+  uploadMiddleware(req, res, async (err) => {
+    if (err) {
+      console.error('Erro no middleware:', err);
+      return res.status(500).json({ error: 'Falha no processamento do upload', details: err.message });
+    }
 
     try {
       if (!req.files || req.files.length === 0) {
         return res.status(400).json({ error: 'Nenhum arquivo enviado.' });
       }
-      const uploadPromises = req.files.map(file => streamUpload(file.buffer));
+
+      console.log(`Processando ${req.files.length} arquivo(s)`);
+      
+      const uploadPromises = req.files.map(file => {
+        console.log(`Enviando arquivo: ${file.originalname}, tamanho: ${file.size}`);
+        return streamUpload(file.buffer);
+      });
+
       const results = await Promise.all(uploadPromises);
-      // Retornamos as URLs seguras dos arquivos que foram enviados
       const urls = results.map(result => result.secure_url);
-      res.status(200).json({ success: true, urls });
+      
+      return res.status(200).json({ success: true, urls });
     } catch (e) {
-      console.error('Erro ao fazer upload para o Cloudinary:', e);
-      res.status(500).json({ error: `Erro na API de Upload: ${e.message}` });
+      console.error('Erro no upload:', e);
+      return res.status(500).json({ 
+        error: 'Erro no upload para o Cloudinary',
+        details: e.message 
+      });
     }
   });
 }
