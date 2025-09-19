@@ -45,10 +45,6 @@ const streamUpload = (buffer) => {
 
 // ...existing code...
 export default async function handler(req, res) {
-  // Verificar método
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Método não permitido.' });
-  }
 
   // Verificar configuração do Cloudinary
   if (!process.env.CLOUDINARY_CLOUD_NAME || !process.env.CLOUDINARY_API_KEY || !process.env.CLOUDINARY_API_SECRET) {
