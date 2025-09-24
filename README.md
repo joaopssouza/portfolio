@@ -36,6 +36,6 @@ _O conteúdo dos projetos é centralizado em `src/data/projects.js`, o que facil
 
 ## 🌐 Preview Online
 
-🔗 [Acesse meu portfólio aqui](https://seu-link-do-portfolio.com)  
+🔗 [Acesse meu portfólio aqui](https://www.joaopssouza.com.br/) 
 
 ---
