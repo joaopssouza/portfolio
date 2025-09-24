@@ -3,13 +3,13 @@ import { v2 as cloudinary } from 'cloudinary';
 import multer from 'multer';
 import streamifier from 'streamifier';
 
-// Configuração segura do Cloudinary com variáveis de ambiente
-cloudinary.config({ 
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME, 
-  api_key: process.env.CLOUDINARY_API_KEY, 
-  api_secret: process.env.CLOUDINARY_API_SECRET,
-  secure: true
-});
+// Configuração do Cloudinary usando URL
+if (!process.env.CLOUDINARY_URL) {
+  throw new Error('CLOUDINARY_URL não está definida');
+}
+
+// O cloudinary automaticamente detecta e usa CLOUDINARY_URL
+cloudinary.config({ secure: true });
 
 // Configuração do Multer para processar os arquivos em memória
 const storage = multer.memoryStorage();
@@ -43,12 +43,15 @@ const streamUpload = (buffer) => {
   });
 };
 
-// ...existing code...
 export default async function handler(req, res) {
+  // Verifica método HTTP
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Método não permitido.' });
+  }
 
-  // Verificar configuração do Cloudinary
-  if (!process.env.CLOUDINARY_CLOUD_NAME || !process.env.CLOUDINARY_API_KEY || !process.env.CLOUDINARY_API_SECRET) {
-    console.error('Configuração do Cloudinary ausente');
+  // Verifica configuração do Cloudinary
+  if (!process.env.CLOUDINARY_URL) {
+    console.error('CLOUDINARY_URL não está definida');
     return res.status(500).json({ error: 'Erro de configuração do servidor' });
   }
 
