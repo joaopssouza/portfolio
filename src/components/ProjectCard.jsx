@@ -4,6 +4,10 @@ import { Link } from 'react-router-dom';
 
 
 const ProjectCard = ({ project, isLCP }) => {
+    // URLs dos placeholders para cada tema
+  const DARK_PLACEHOLDER = 'https://placehold.co/400x215/0d1117/388bfd/';
+  const LIGHT_PLACEHOLDER = 'https://placehold.co/400x215/f6f8fa/0a5cc9/';
+
   // Adiciona transformações à URL da imagem para otimização
   const getOptimizedImageUrl = (url) => {
     if (!url || !url.includes('cloudinary')) {
@@ -16,7 +20,17 @@ const ProjectCard = ({ project, isLCP }) => {
     return url.replace('/upload/', '/upload/w_400,q_auto,f_auto/');
   };
 
-  const optimizedImageUrl = getOptimizedImageUrl(project.imageUrl);
+  // Lógica para decidir qual URL de imagem usar
+  const getImageUrlToDisplay = () => {
+    // Se o projeto tem uma imagem, otimiza e a retorna
+    if (project.imageUrl) {
+      return getOptimizedImageUrl(project.imageUrl);
+    }
+    // Se não tem, retorna o placeholder correspondente ao tema atual
+    return theme === 'light' ? LIGHT_PLACEHOLDER : DARK_PLACEHOLDER;
+  };
+
+  const imageUrlToDisplay = getImageUrlToDisplay();
 
   // Função para formatar a data
   const formattedDate = new Date(project.publicationDate).toLocaleDateString('pt-BR', {
@@ -30,7 +44,7 @@ const ProjectCard = ({ project, isLCP }) => {
       {/* Usamos a nova URL otimizada */}
       <Link to={project.projectUrl}>
         <div className="card-media-container">
-          <img src={optimizedImageUrl} alt={`Prévia ${project.title}`} fetchPriority={isLCP ? "high" : "auto"} className="card-miniature" />
+          <img src={imageUrlToDisplay}alt={`Prévia ${project.title}`} fetchPriority={isLCP ? "high" : "auto"} className="card-miniature" />
         </div>
       </Link>
       <div className="card-body">
