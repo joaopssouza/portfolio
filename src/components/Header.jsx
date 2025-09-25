@@ -10,6 +10,7 @@ const Header = () => {
         <nav className="nav">
           <a href="#sobre">Sobre</a>
           <a href="#projetos">Projetos</a>
+          <a href="/admin/dashboard">Painel de Controle</a>
         </nav>
         <ThemeToggle />
       </div>

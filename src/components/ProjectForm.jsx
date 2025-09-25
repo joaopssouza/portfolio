@@ -22,38 +22,18 @@ const initialProjectState = {
   details: { fullDescription: '', images: [], videos: [], pdfUrl: '' }
 };
 
-// Função para extrair o public_id da URL do Cloudinary
-const getPublicIdFromUrl = (url) => {
-    try {
-        const regex = /\/upload\/(?:v\d+\/)?(?:portifolio\/projects\/)?([^\.]+)/;
-        const match = url.match(regex);
-        return match ? `portifolio/projects/${match[1]}` : null;
-    } catch {
-        return null;
-    }
-};
-
 const ProjectForm = ({ projectToEdit, onSave, onCancel }) => {
   const [project, setProject] = useState(initialProjectState);
-  const [mediaFiles, setMediaFiles] = useState([]);
-  const [pdfFile, setPdfFile] = useState(null);
-  const [mediaToDelete, setMediaToDelete] = useState([]);
+  const [newMediaFiles, setNewMediaFiles] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     if (projectToEdit) {
-      const initialData = {
-        ...initialProjectState,
-        ...projectToEdit,
-        details: { ...initialProjectState.details, ...(projectToEdit.details || {}) }
-      };
-      setProject(initialData);
+      setProject({ ...initialProjectState, ...projectToEdit, details: { ...initialProjectState.details, ...(projectToEdit.details || {}) } });
     } else {
       setProject(initialProjectState);
     }
-    setMediaFiles([]);
-    setPdfFile(null);
-    setMediaToDelete([]);
+    setNewMediaFiles([]);
   }, [projectToEdit]);
 
   const handleChange = (e) => {
@@ -66,21 +46,51 @@ const ProjectForm = ({ projectToEdit, onSave, onCancel }) => {
     }
   };
 
-  const handleMediaChange = (e) => setMediaFiles(Array.from(e.target.files));
-  const handlePdfChange = (e) => setPdfFile(e.target.files[0]);
+  const handleMediaChange = (e) => {
+    const files = Array.from(e.target.files);
+    const previews = files.map(file => ({
+      file: file,
+      url: URL.createObjectURL(file),
+      type: file.type.startsWith('video') ? 'video' : (file.type === 'application/pdf' ? 'pdf' : 'image')
+    }));
+    setNewMediaFiles(prev => [...prev, ...previews]);
+  };
 
-  const handleDeleteMedia = (urlToDelete, mediaType) => {
-    const publicId = getPublicIdFromUrl(urlToDelete);
-    if (publicId) {
-      setMediaToDelete(prev => [...prev, publicId]);
+  const handleDeleteMedia = async (urlToDelete, mediaType, isNew = false) => {
+    if (isNew) {
+      setNewMediaFiles(files => files.filter(f => f.url !== urlToDelete));
+      URL.revokeObjectURL(urlToDelete);
+      return;
     }
 
-    if (mediaType === 'image') {
-      setProject(prev => ({ ...prev, details: { ...prev.details, images: prev.details.images.filter(url => url !== urlToDelete) }}));
-    } else if (mediaType === 'video') {
-      setProject(prev => ({ ...prev, details: { ...prev.details, videos: prev.details.videos.filter(url => url !== urlToDelete) }}));
-    } else if (mediaType === 'pdf') {
-      setProject(prev => ({ ...prev, details: { ...prev.details, pdfUrl: '' }}));
+    if (!projectToEdit._id || !confirm('Deseja excluir esta mídia permanentemente do servidor? A ação não pode ser desfeita.')) {
+      return;
+    }
+
+    try {
+      const response = await fetch('/api/projects', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          _id: projectToEdit._id,
+          mediaUrlToRemove: urlToDelete,
+          mediaType: mediaType
+        })
+      });
+
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error);
+
+      if (mediaType === 'pdf') {
+        setProject(p => ({ ...p, details: { ...p.details, pdfUrl: '' } }));
+      } else {
+        const field = mediaType === 'image' ? 'images' : 'videos';
+        setProject(p => ({ ...p, details: { ...p.details, [field]: p.details[field].filter(url => url !== urlToDelete) } }));
+      }
+      alert('Mídia excluída com sucesso!');
+    } catch (error) {
+      console.error("Erro ao excluir mídia:", error);
+      alert(`Falha ao excluir a mídia: ${error.message}`);
     }
   };
 
@@ -88,60 +98,65 @@ const ProjectForm = ({ projectToEdit, onSave, onCancel }) => {
     e.preventDefault();
     setIsSubmitting(true);
 
-    let uploadedMediaUrls = { images: project.details.images || [], videos: project.details.videos || [] };
-    let uploadedPdfUrl = project.details.pdfUrl || '';
+    // Cria uma cópia profunda para evitar mutações inesperadas do estado
+    let projectDataForSave = JSON.parse(JSON.stringify(project));
 
-    const filesToUpload = [...mediaFiles];
-    if (pdfFile) filesToUpload.push(pdfFile);
-
-    if (filesToUpload.length > 0) {
+    // 1. Lida com o upload de novas mídias
+    if (newMediaFiles.length > 0) {
       const formData = new FormData();
-      filesToUpload.forEach(file => formData.append('media', file));
+      newMediaFiles.forEach(media => formData.append('media', media.file));
 
       try {
-        const response = await fetch('/api/upload', { method: 'POST', body: formData });
-        const data = await response.json();
-        if (!response.ok) throw new Error(data.error || 'Falha no upload das mídias.');
-        
-        // *** AJUSTE AQUI: Processar a nova resposta da API ***
-        data.urls.forEach(fileInfo => {
-          if (fileInfo.resourceType === 'video') {
-            uploadedMediaUrls.videos.push(fileInfo.url);
-          } else { // Imagens e PDFs são tratados como 'image' pelo Cloudinary
-            if (fileInfo.url.endsWith('.pdf')) {
-                uploadedPdfUrl = fileInfo.url;
+        if (newMediaFiles.length > 0) {
+          const formData = new FormData();
+          newMediaFiles.forEach(media => formData.append('media', media.file));
+
+          // **MUDANÇA IMPORTANTE**: Envia o _id para a API de upload
+          const uploadUrl = `/api/upload?projectId=${projectForUpload._id}`;
+          const uploadResponse = await fetch(uploadUrl, { method: 'POST', body: formData });
+          const uploadData = await uploadResponse.json();
+          if (!uploadResponse.ok) throw new Error(uploadData.error || 'Falha no upload.');
+
+          // Adiciona as novas URLs ao objeto do projeto
+          uploadData.urls.forEach(fileInfo => {
+            if (fileInfo.resourceType === 'video') {
+              projectForUpload.details.videos.push(fileInfo.url);
             } else {
-                uploadedMediaUrls.images.push(fileInfo.url);
+              projectForUpload.details.images.push(fileInfo.url);
             }
-          }
-        });
+          });
+        }
+
+        // --- ETAPA 3: Salvar o projeto final com as URLs das mídias ---
+        await onSave(projectForUpload);
+
+        setNewMediaFiles([]); // Limpa a fila de upload
 
       } catch (error) {
-        console.error("Erro no upload:", error);
-        alert(`Ocorreu um erro ao enviar as mídias: ${error.message}`);
+        console.error("Erro no processo de salvamento:", error);
+        alert(`Ocorreu um erro: ${error.message}`);
+      } finally {
         setIsSubmitting(false);
-        return;
       }
     }
 
-    const finalProjectData = {
-      ...project,
-      details: {
-        ...project.details,
-        images: uploadedMediaUrls.images,
-        videos: uploadedMediaUrls.videos,
-        pdfUrl: uploadedPdfUrl,
-      },
-      mediaToDelete,
-    };
-    
-    onSave(finalProjectData);
+    // 2. Define a URL do projeto e envia os dados finais para o componente pai salvar
+    projectDataForSave.projectUrl = `/projeto/${projectDataForSave.id}`;
+
+    await onSave(projectDataForSave);
+
     setIsSubmitting(false);
   };
-  
+
+  const allMediaPreviews = [
+    ...project.details.images.map(url => ({ url, type: 'image', isNew: false })),
+    ...project.details.videos.map(url => ({ url, type: 'video', isNew: false })),
+    ...(project.details.pdfUrl ? [{ url: project.details.pdfUrl, type: 'pdf', isNew: false }] : []),
+    ...newMediaFiles.map(f => ({ ...f, isNew: true }))
+  ];
+
   return (
     <form onSubmit={handleSubmit} style={styles.form}>
-      {/* Grupos de campos existentes */}
       <div style={styles.fieldGroup}>
         <label style={styles.label}>ID (Slug)</label>
         <input style={styles.input} type="text" name="id" value={project.id} onChange={handleChange} required placeholder="ex: meu-projeto-incrivel" />
@@ -150,7 +165,7 @@ const ProjectForm = ({ projectToEdit, onSave, onCancel }) => {
         <label style={styles.label}>Data de Publicação</label>
         <input style={styles.input} type="date" name="publicationDate" value={project.publicationDate.split('T')[0]} onChange={handleChange} required />
         <label style={styles.label}>Descrição Curta (para o card)</label>
-        <textarea style={{...styles.input, ...styles.textarea}} name="description" value={project.description} onChange={handleChange} required />
+        <textarea style={{ ...styles.input, ...styles.textarea }} name="description" value={project.description} onChange={handleChange} required />
       </div>
       <div style={styles.fieldGroup}>
         <label style={styles.label}>URL da Imagem Principal (Capa)</label>
@@ -160,46 +175,32 @@ const ProjectForm = ({ projectToEdit, onSave, onCancel }) => {
         <label style={styles.label}>URL da Página (Preview)</label>
         <input style={styles.input} type="url" name="linkPreview" value={project.linkPreview} onChange={handleChange} />
       </div>
-
-      {/* Seção de Mídias Atualizada */}
       <div style={styles.fieldGroup}>
         <label style={styles.label}>Descrição Completa (HTML permitido)</label>
-        <textarea style={{...styles.input, ...styles.textarea}} name="details.fullDescription" value={project.details.fullDescription} onChange={handleChange} />
-        
-        <label style={styles.label}>Adicionar Imagens e Vídeos</label>
-        <input style={{...styles.input, ...styles.fileInput}} type="file" multiple onChange={handleMediaChange} accept="image/*,video/*" />
-        <small>As novas mídias serão adicionadas às existentes.</small>
+        <textarea style={{ ...styles.input, ...styles.textarea }} name="details.fullDescription" value={project.details.fullDescription} onChange={handleChange} />
 
-        <label style={styles.label} htmlFor="pdf-upload">Enviar Relatório (PDF)</label>
-        <input id="pdf-upload" style={{...styles.input, ...styles.fileInput}} type="file" onChange={handlePdfChange} accept=".pdf" />
-        {project.details.pdfUrl && !pdfFile && <small>O envio de um novo arquivo substituirá o PDF existente.</small>}
+        <label style={styles.label}>Adicionar Imagens, Vídeos e PDF</label>
+        <input style={{ ...styles.input, ...styles.fileInput }} type="file" multiple onChange={handleMediaChange} accept="image/*,video/*,application/pdf" />
 
-        {/* Preview das Mídias */}
         <div style={styles.mediaPreviewContainer}>
-          {project.details.images.map(url => (
-            <div key={url} style={styles.mediaThumbnail}>
-              <img src={url.replace('/upload/', '/upload/w_100,h_100,c_fill/')} alt="Preview" style={styles.media} />
-              <button type="button" onClick={() => handleDeleteMedia(url, 'image')} style={styles.deleteButton}>X</button>
+          {allMediaPreviews.map(media => (
+            <div key={media.url} style={styles.mediaThumbnail}>
+              {media.type === 'image' && <img src={media.url} alt="Preview" style={styles.media} />}
+              {media.type === 'video' && <video src={media.url} style={styles.media} />}
+              {media.type === 'pdf' && (
+                <div style={{ ...styles.mediaThumbnail, ...styles.pdfThumbnail }}>
+                  <span>📄</span>
+                  <span style={{ wordBreak: 'break-word' }}>{media.isNew ? media.file.name : media.url.split('/').pop()}</span>
+                </div>
+              )}
+              <button type="button" onClick={() => handleDeleteMedia(media.url, media.type, media.isNew)} style={styles.deleteButton}>X</button>
             </div>
           ))}
-          {project.details.videos.map(url => (
-            <div key={url} style={styles.mediaThumbnail}>
-              <video src={url.replace('/upload/', '/upload/w_100,h_100,c_fill,so_0/')} style={styles.media} />
-              <button type="button" onClick={() => handleDeleteMedia(url, 'video')} style={styles.deleteButton}>X</button>
-            </div>
-          ))}
-          {project.details.pdfUrl && (
-            <div style={{...styles.mediaThumbnail, ...styles.pdfThumbnail}}>
-              <span>📄</span>
-              <span style={{wordBreak: 'break-word'}}>{project.details.pdfUrl.split('/').pop()}</span>
-              <button type="button" onClick={() => handleDeleteMedia(project.details.pdfUrl, 'pdf')} style={styles.deleteButton}>X</button>
-            </div>
-          )}
         </div>
       </div>
 
       <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end', marginTop: '20px' }}>
-        <button type="button" onClick={onCancel} style={{...styles.button, backgroundColor: '#30363d', color: '#c9d1d9' }}>Cancelar</button>
+        <button type="button" onClick={onCancel} style={{ ...styles.button, backgroundColor: '#30363d', color: '#c9d1d9' }}>Cancelar</button>
         <button type="submit" style={styles.button} disabled={isSubmitting}>
           {isSubmitting ? 'Salvando...' : 'Salvar Projeto'}
         </button>
