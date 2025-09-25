@@ -1,33 +1,53 @@
 // src/components/ProjectCard.jsx
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import ThemeToggle from '../components/ThemeToggle.jsx';
-
 
 const ProjectCard = ({ project, isLCP }) => {
-    // URLs dos placeholders para cada tema
+  // URLs dos placeholders que você especificou para cada tema
   const DARK_PLACEHOLDER = 'https://placehold.co/400x215/0d1117/388bfd/';
   const LIGHT_PLACEHOLDER = 'https://placehold.co/400x215/f6f8fa/0a5cc9/';
+
+  // 1. Estado para armazenar o tema atual.
+  // Ele lê o valor inicial do localStorage para já carregar com o tema correto.
+  const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'dark');
+
+  // 2. Efeito que observa mudanças no tema da página.
+  useEffect(() => {
+    // A função do observer é chamada sempre que uma mutação ocorre no HTML.
+    const observer = new MutationObserver((mutationsList) => {
+      for (const mutation of mutationsList) {
+        // Verificamos se o atributo modificado foi o 'data-theme'.
+        if (mutation.type === 'attributes' && mutation.attributeName === 'data-theme') {
+          // Atualiza o estado interno do card com o novo tema.
+          setTheme(mutation.target.getAttribute('data-theme'));
+        }
+      }
+    });
+
+    // Inicia a observação no elemento <html>, focado em mudanças de atributos.
+    observer.observe(document.documentElement, { attributes: true });
+
+    // Função de limpeza: para o observador quando o componente é desmontado para evitar leaks de memória.
+    return () => {
+      observer.disconnect();
+    };
+  }, []); // O array vazio assegura que o efeito rode apenas na montagem do componente.
 
   // Adiciona transformações à URL da imagem para otimização
   const getOptimizedImageUrl = (url) => {
     if (!url || !url.includes('cloudinary')) {
-      return url; // Retorna a URL original se não for do Cloudinary
+      return url;
     }
-    // "upload/" é o ponto onde inserimos as transformações
-    // w_400: largura de 400px
-    // q_auto: qualidade automática (ótima compressão)
-    // f_auto: formato automático (entrega WebP/AVIF se o navegador suportar)
     return url.replace('/upload/', '/upload/w_400,q_auto,f_auto/');
   };
 
-  // Lógica para decidir qual URL de imagem usar
+  // 3. Lógica para decidir qual URL de imagem usar.
   const getImageUrlToDisplay = () => {
-    // Se o projeto tem uma imagem, otimiza e a retorna
+    // Se o projeto tem uma imagem, a otimiza e retorna.
     if (project.imageUrl) {
       return getOptimizedImageUrl(project.imageUrl);
     }
-    // Se não tem, retorna o placeholder correspondente ao tema atual
+    // Se não tem, retorna o placeholder correspondente ao tema atual do estado.
     return theme === 'light' ? LIGHT_PLACEHOLDER : DARK_PLACEHOLDER;
   };
 
@@ -42,17 +62,22 @@ const ProjectCard = ({ project, isLCP }) => {
 
   return (
     <article className="card">
-      {/* Usamos a nova URL otimizada */}
       <Link to={project.projectUrl}>
         <div className="card-media-container">
-          <img src={imageUrlToDisplay}alt={`Prévia ${project.title}`} fetchPriority={isLCP ? "high" : "auto"} className="card-miniature" />
+          {/* Usa a URL final (otimizada, placeholder dark ou placeholder light) */}
+          <img 
+            src={imageUrlToDisplay} 
+            alt={`Prévia ${project.title}`} 
+            fetchPriority={isLCP ? "high" : "auto"} 
+            className="card-miniature" 
+          />
         </div>
       </Link>
       <div className="card-body">
         <div className="card-header">
           <h3 className="card-title">{project.title}</h3>
         </div>
-      {project.publicationDate && <time className="card-date">{formattedDate}</time>}
+        {project.publicationDate && <time className="card-date">{formattedDate}</time>}
         <p className="card-text">{project.description}</p>
         <div className="card-actions">
           <Link className="btn" to={project.projectUrl}>Ver página</Link>
