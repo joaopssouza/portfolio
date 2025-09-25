@@ -24,18 +24,34 @@ export const config = {
 };
 
 // Função auxiliar para fazer o upload de um buffer para o Cloudinary
-const streamUpload = (buffer) => {
+const streamUpload = (buffer, originalname) => {
   return new Promise((resolve, reject) => {
+    // Determina se é vídeo baseado na extensão do arquivo
+    const isVideo = /\.(mp4|mov|avi|wmv)$/i.test(originalname);
+    
+    const uploadOptions = {
+      folder: 'portifolio/projects',
+      resource_type: isVideo ? 'video' : 'image',
+      // Configurações de transformação
+      transformation: isVideo ? [
+        { fetch_format: 'webm' },
+        { quality: 'auto' }
+      ] : [
+        { fetch_format: 'webp' },
+        { quality: 'auto' },
+        { flags: 'preserve_transparency' }
+      ]
+    };
+
     const stream = cloudinary.uploader.upload_stream(
-      { 
-        folder: 'portifolio/projects', // Pasta de destino no Cloudinary
-        resource_type: 'auto' // Detecta se é imagem ou vídeo
-      },
+      uploadOptions,
       (error, result) => {
-        if (result) {
-          resolve(result);
-        } else {
+        if (error) {
+          console.error('Erro no upload:', error);
           reject(error);
+        } else {
+          console.log(`Arquivo convertido com sucesso: ${result.format}`);
+          resolve(result);
         }
       }
     );
@@ -63,27 +79,31 @@ export default async function handler(req, res) {
     }
 
     try {
-      if (!req.files || req.files.length === 0) {
-        return res.status(400).json({ error: 'Nenhum arquivo enviado.' });
-      }
-
-      console.log(`Processando ${req.files.length} arquivo(s)`);
-      
-      const uploadPromises = req.files.map(file => {
-        console.log(`Enviando arquivo: ${file.originalname}, tamanho: ${file.size}`);
-        return streamUpload(file.buffer);
-      });
-
-      const results = await Promise.all(uploadPromises);
-      const urls = results.map(result => result.secure_url);
-      
-      return res.status(200).json({ success: true, urls });
-    } catch (e) {
-      console.error('Erro no upload:', e);
-      return res.status(500).json({ 
-        error: 'Erro no upload para o Cloudinary',
-        details: e.message 
-      });
+    if (!req.files || req.files.length === 0) {
+      return res.status(400).json({ error: 'Nenhum arquivo enviado.' });
     }
+
+    console.log(`Processando ${req.files.length} arquivo(s)`);
+    
+    const uploadPromises = req.files.map(file => {
+      console.log(`Enviando arquivo: ${file.originalname}, tipo: ${file.mimetype}`);
+      return streamUpload(file.buffer, file.originalname);
+    });
+
+    const results = await Promise.all(uploadPromises);
+    const urls = results.map(result => ({
+      url: result.secure_url,
+      format: result.format,
+      resourceType: result.resource_type
+    }));
+    
+    return res.status(200).json({ success: true, urls });
+  } catch (e) {
+    console.error('Erro no upload:', e);
+    return res.status(500).json({ 
+      error: 'Erro no upload para o Cloudinary',
+      details: e.message 
+    });
+  }
   });
 }
