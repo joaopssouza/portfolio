@@ -8,9 +8,10 @@ import Pagination from '../components/Pagination.jsx';
 const Home = () => {
   const [projects, setProjects] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
-  const projectsPerPage = 9;
+  const projectsPerPage = 6;
 
   useEffect(() => {
+    document.title = 'João Paulo — Portfólio';
     // Busca os projetos da nossa nova API
     fetch('/api/projects')
       .then(res => res.json())

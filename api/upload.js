@@ -10,18 +10,13 @@ if (!process.env.CLOUDINARY_URL) {
 
 // O cloudinary automaticamente detecta e usa CLOUDINARY_URL
 cloudinary.config({ secure: true });
-// A configuração é agora lida diretamente das variáveis de ambiente sincronizadas
-cloudinary.config({ 
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME, 
-  api_key: process.env.CLOUDINARY_API_KEY, 
-  api_secret: process.env.CLOUDINARY_API_SECRET,
-  secure: true
-});
 
+// Configuração do Multer para processar os arquivos em memória
 const storage = multer.memoryStorage();
 const upload = multer({ storage });
-const uploadMiddleware = upload.array('media');
+const uploadMiddleware = upload.array('media'); // 'media' é o nome do campo no formulário
 
+// Função para desabilitar o parser padrão do Next.js/Vercel para esta rota
 export const config = {
   api: {
     bodyParser: false,
@@ -30,7 +25,6 @@ export const config = {
 
 // Função auxiliar para fazer o upload de um buffer para o Cloudinary
 const streamUpload = (buffer, originalname) => {
-const streamUpload = (buffer) => {
   return new Promise((resolve, reject) => {
     // Determina se é vídeo baseado na extensão do arquivo
     const isVideo = /\.(mp4|mov|avi|wmv)$/i.test(originalname);
@@ -51,7 +45,6 @@ const streamUpload = (buffer) => {
 
     const stream = cloudinary.uploader.upload_stream(
       uploadOptions,
-      { folder: 'portifolio/projects', resource_type: 'auto' },
       (error, result) => {
         if (error) {
           console.error('Erro no upload:', error);
@@ -59,9 +52,6 @@ const streamUpload = (buffer) => {
         } else {
           console.log(`Arquivo convertido com sucesso: ${result.format}`);
           resolve(result);
-        } else {
-          // Rejeita a promessa com a mensagem de erro específica
-          reject(new Error(error ? error.message : 'Erro desconhecido do Cloudinary.'));
         }
       }
     );
@@ -75,24 +65,45 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Método não permitido.' });
   }
 
+  // Verifica configuração do Cloudinary
+  if (!process.env.CLOUDINARY_URL) {
+    console.error('CLOUDINARY_URL não está definida');
+    return res.status(500).json({ error: 'Erro de configuração do servidor' });
+  }
+
+  // Processar upload
   uploadMiddleware(req, res, async (err) => {
     if (err) {
-      return res.status(500).json({ error: 'Falha no processamento do Multer.', details: err.message });
-    }
-    if (!req.files || req.files.length === 0) {
-      return res.status(400).json({ error: 'Nenhum ficheiro foi enviado.' });
+      console.error('Erro no middleware:', err);
+      return res.status(500).json({ error: 'Falha no processamento do upload', details: err.message });
     }
 
     try {
-      const uploadPromises = req.files.map(file => streamUpload(file.buffer));
-      const results = await Promise.all(uploadPromises);
-      const urls = results.map(result => result.secure_url);
-      
-      res.status(200).json({ success: true, urls });
-    } catch (e) {
-      console.error('Erro detalhado no upload:', e);
-      // Retorna a mensagem de erro específica para o frontend
-      res.status(500).json({ error: `Erro na API de Upload: ${e.message}` });
+    if (!req.files || req.files.length === 0) {
+      return res.status(400).json({ error: 'Nenhum arquivo enviado.' });
     }
+
+    console.log(`Processando ${req.files.length} arquivo(s)`);
+    
+    const uploadPromises = req.files.map(file => {
+      console.log(`Enviando arquivo: ${file.originalname}, tipo: ${file.mimetype}`);
+      return streamUpload(file.buffer, file.originalname);
+    });
+
+    const results = await Promise.all(uploadPromises);
+    const urls = results.map(result => ({
+      url: result.secure_url,
+      format: result.format,
+      resourceType: result.resource_type
+    }));
+    
+    return res.status(200).json({ success: true, urls });
+  } catch (e) {
+    console.error('Erro no upload:', e);
+    return res.status(500).json({ 
+      error: 'Erro no upload para o Cloudinary',
+      details: e.message 
+    });
+  }
   });
 }
