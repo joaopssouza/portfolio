@@ -3,9 +3,6 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Modal from '../components/Modal'; // Usaremos o componente Modal existente
 import ProjectForm from '../components/ProjectForm'; // Importamos nosso novo formulário
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-
 
 const styles = {
   dashboardContainer: { maxWidth: '1200px', margin: '40px auto', padding: '20px', fontFamily: 'system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif', backgroundColor: '#161b22', color: '#c9d1d9', borderRadius: '12px', border: '1px solid #30363d' },
