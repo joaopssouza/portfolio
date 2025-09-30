@@ -1,14 +1,14 @@
 // src/pages/AdminDashboard.jsx
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import Modal from '../components/Modal'; // Usaremos o componente Modal existente
-import ProjectForm from '../components/ProjectForm'; // Importamos nosso novo formulário
+import { useNavigate, Link } from 'react-router-dom'; // 1. Importar o Link
+import Modal from '../components/Modal';
+import ProjectForm from '../components/ProjectForm';
 
 const styles = {
   dashboardContainer: { maxWidth: '1200px', margin: '40px auto', padding: '20px', fontFamily: 'system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif', backgroundColor: '#161b22', color: '#c9d1d9', borderRadius: '12px', border: '1px solid #30363d' },
   header: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px', paddingBottom: '20px', borderBottom: '1px solid #30363d' },
   headerTitle: { color: '#58a6ff', margin: 0 },
-  button: { display: 'inline-block', border: '1px solid #30363d', cursor: 'pointer', backgroundColor: '#21262d', color: '#c9d1d9', padding: '8px 14px', borderRadius: '8px', fontWeight: '600', transition: 'all .2s ease' },
+  button: { display: 'inline-block', border: '1px solid #30363d', cursor: 'pointer', backgroundColor: '#21262d', color: '#c9d1d9', padding: '8px 14px', borderRadius: '8px', fontWeight: '600', transition: 'all .2s ease', textDecoration: 'none' },
   buttonPrimary: { backgroundColor: '#58a6ff', color: '#0d1117', borderColor: '#58a6ff' },
   projectTable: { width: '100%', borderCollapse: 'collapse', marginTop: '20px' },
   tableHead: { borderBottom: '1px solid #30363d', textAlign: 'left' },
@@ -25,17 +25,18 @@ const AdminDashboard = () => {
   const [selectedProject, setSelectedProject] = useState(null);
   const navigate = useNavigate();
 
-  const handleLogout = async () => {
-    await fetch('/api/auth/logout');
-    navigate('/admin/login');
-  };
-
   const fetchProjects = () => {
     setIsLoading(true);
     fetch('/api/projects')
       .then(res => res.json())
       .then(data => {
-        setProjects(data); // A API já está retornando ordenado
+        if (data.error) {
+          if (data.error === 'Acesso não autorizado.' || data.error === 'Token inválido ou expirado.') {
+            navigate('/admin/login');
+          }
+          throw new Error(data.error);
+        }
+        setProjects(data);
         setIsLoading(false);
       })
       .catch(err => {
@@ -47,6 +48,11 @@ const AdminDashboard = () => {
   useEffect(() => {
     fetchProjects();
   }, []);
+
+  const handleLogout = async () => {
+    await fetch('/api/auth/logout');
+    navigate('/admin/login');
+  };
 
   const openModal = (project = null) => {
     setSelectedProject(project);
@@ -76,7 +82,7 @@ const AdminDashboard = () => {
       }
       
       closeModal();
-      fetchProjects(); // Recarrega a lista de projetos
+      fetchProjects();
       alert(`Projeto ${isEditing ? 'atualizado' : 'criado'} com sucesso!`);
 
     } catch (error) {
@@ -94,7 +100,7 @@ const AdminDashboard = () => {
 
         if (!response.ok) throw new Error(result.error);
         
-        fetchProjects(); // Recarrega a lista
+        fetchProjects();
         alert('Projeto excluído com sucesso!');
       } catch (error) {
         console.error("Erro ao excluir:", error);
@@ -105,7 +111,6 @@ const AdminDashboard = () => {
     }
   };
   
-  // O componente Modal precisa ser adaptado para conteúdo genérico, não apenas mídia
   const renderModalContent = () => (
     <div style={{ background: '#161b22', padding: '25px', borderRadius: '12px', width: '90vw', maxWidth: '800px' }}>
       <h2 style={{ color: '#58a6ff', marginTop: 0, marginBottom: '20px' }}>
@@ -128,6 +133,10 @@ const AdminDashboard = () => {
       <header style={styles.header}>
         <h1 style={styles.headerTitle}>Painel de Administração</h1>
         <div>
+          {/* 2. Botão adicionado aqui */}
+          <Link to="/" style={{...styles.button, marginRight: '10px'}}>
+            Voltar ao Início
+          </Link>
           <button onClick={() => openModal()} style={{ ...styles.button, ...styles.buttonPrimary, marginRight: '10px' }}>
             Adicionar Projeto
           </button>
