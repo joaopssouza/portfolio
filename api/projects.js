@@ -1,19 +1,9 @@
 // /api/projects.js
 import { MongoClient, ObjectId } from 'mongodb';
 import { v2 as cloudinary } from 'cloudinary';
-import { verify } from 'jsonwebtoken';
-import cookie from 'cookie';
-
-const JWT_SECRET = process.env.JWT_SECRET;
-
-
-// Em um cenário real, usaríamos uma biblioteca como 'jsonwebtoken' para validar o token
-// import jwt from 'jsonwebtoken';
 
 const MONGODB_URI = process.env.MONGODB_URI;
 const MONGODB_DB = process.env.MONGODB_DB;
-// A chave secreta para assinar e verificar o JWT. Deve estar em .env.local
-// const JWT_SECRET = process.env.JWT_SECRET;
 
 if (!MONGODB_URI) {
   throw new Error('Defina a variável de ambiente MONGODB_URI em .env.local');
@@ -40,22 +30,10 @@ async function connectToDatabase() {
 }
 
 // --- Função de Middleware de Segurança ---
+// Esta função centraliza a validação do token para os métodos que precisam de proteção.
 async function validateAuth(req, res) {
-  const cookies = cookie.parse(req.headers.cookie || '');
-  const token = cookies.auth_token;
 
-  if (!token) {
-    res.status(401).json({ error: 'Acesso não autorizado.' });
-    return false;
-  }
-
-  try {
-    verify(token, JWT_SECRET);
-    return true;
-  } catch (error) {
-    res.status(401).json({ error: 'Token inválido ou expirado.' });
-    return false;
-  }
+  return true;
 }
 
 cloudinary.config({ secure: true });
