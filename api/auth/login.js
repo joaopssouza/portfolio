@@ -1,5 +1,5 @@
 // /api/auth/login.js
-import { sign } from 'jsonwebtoken';
+import jwt from 'jsonwebtoken'; // Alteração aqui
 import cookie from 'cookie';
 
 const JWT_SECRET = process.env.JWT_SECRET;
@@ -18,7 +18,8 @@ export default async function handler(req, res) {
   const { username, password } = req.body;
 
   if (username === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
-    const token = sign({ user: 'admin' }, JWT_SECRET, { expiresIn: '8h' });
+    // Usamos jwt.sign em vez de apenas sign
+    const token = jwt.sign({ user: 'admin' }, JWT_SECRET, { expiresIn: '8h' }); // Alteração aqui
 
     res.setHeader('Set-Cookie', cookie.serialize('auth_token', token, {
       httpOnly: true,
