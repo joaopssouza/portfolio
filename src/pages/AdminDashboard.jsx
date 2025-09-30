@@ -3,6 +3,9 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Modal from '../components/Modal'; // Usaremos o componente Modal existente
 import ProjectForm from '../components/ProjectForm'; // Importamos nosso novo formulário
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+
 
 const styles = {
   dashboardContainer: { maxWidth: '1200px', margin: '40px auto', padding: '20px', fontFamily: 'system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif', backgroundColor: '#161b22', color: '#c9d1d9', borderRadius: '12px', border: '1px solid #30363d' },
@@ -24,6 +27,11 @@ const AdminDashboard = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedProject, setSelectedProject] = useState(null);
   const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    await fetch('/api/auth/logout');
+    navigate('/admin/login');
+  };
 
   const fetchProjects = () => {
     setIsLoading(true);
@@ -122,9 +130,14 @@ const AdminDashboard = () => {
     <div style={styles.dashboardContainer}>
       <header style={styles.header}>
         <h1 style={styles.headerTitle}>Painel de Administração</h1>
-        <button onClick={() => openModal()} style={{ ...styles.button, ...styles.buttonPrimary }}>
-          Adicionar Projeto
-        </button>
+        <div>
+          <button onClick={() => openModal()} style={{ ...styles.button, ...styles.buttonPrimary, marginRight: '10px' }}>
+            Adicionar Projeto
+          </button>
+          <button onClick={handleLogout} style={styles.button}>
+            Sair
+          </button>
+        </div>
       </header>
 
       <main>

@@ -2,10 +2,33 @@
 import { v2 as cloudinary } from 'cloudinary';
 import multer from 'multer';
 import streamifier from 'streamifier';
+import { verify } from 'jsonwebtoken';
+import cookie from 'cookie';
+
+const JWT_SECRET = process.env.JWT_SECRET;
 
 // Configuração do Cloudinary usando URL
 if (!process.env.CLOUDINARY_URL) {
   throw new Error('CLOUDINARY_URL não está definida');
+}
+
+// --- Função de Middleware de Segurança ---
+async function validateAuth(req, res) {
+  const cookies = cookie.parse(req.headers.cookie || '');
+  const token = cookies.auth_token;
+
+  if (!token) {
+    res.status(401).json({ error: 'Acesso não autorizado.' });
+    return false;
+  }
+
+  try {
+    verify(token, JWT_SECRET);
+    return true;
+  } catch (error) {
+    res.status(401).json({ error: 'Token inválido ou expirado.' });
+    return false;
+  }
 }
 
 // O cloudinary automaticamente detecta e usa CLOUDINARY_URL

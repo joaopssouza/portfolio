@@ -1,5 +1,28 @@
 // /api/deleteMedia.js
 import { v2 as cloudinary } from 'cloudinary';
+import { verify } from 'jsonwebtoken';
+import cookie from 'cookie';
+
+const JWT_SECRET = process.env.JWT_SECRET;
+
+// --- Função de Middleware de Segurança ---
+async function validateAuth(req, res) {
+  const cookies = cookie.parse(req.headers.cookie || '');
+  const token = cookies.auth_token;
+
+  if (!token) {
+    res.status(401).json({ error: 'Acesso não autorizado.' });
+    return false;
+  }
+
+  try {
+    verify(token, JWT_SECRET);
+    return true;
+  } catch (error) {
+    res.status(401).json({ error: 'Token inválido ou expirado.' });
+    return false;
+  }
+}
 
 // O SDK do Cloudinary usa a variável de ambiente CLOUDINARY_URL automaticamente
 cloudinary.config({ secure: true });
