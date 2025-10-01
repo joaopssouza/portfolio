@@ -7,7 +7,7 @@ const Footer = () => {
       <div className="container">
         <ul className="contact-list">
           {/* Adicione seu telefone aqui */}
-          <li><a href="tel:+5562999999999">+55 (31) 98650-5863</a></li>
+          <li><a href="tel:+5531986505863">+55 (31) 98650-5863</a></li>
           {/* Adicione seu e-mail aqui */}
           <li><a href="mailto:joaop0737@gmail.com">joaop0737@gmail.com</a></li>
           <li><a href="https://github.com/joaopssouza" target="_blank" rel="noopener noreferrer">GitHub</a></li>
