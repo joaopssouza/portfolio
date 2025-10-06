@@ -2,14 +2,38 @@
 import { v2 as cloudinary } from 'cloudinary';
 import multer from 'multer';
 import streamifier from 'streamifier';
+import jwt from 'jsonwebtoken';
+const { verify } = jwt;
+import cookie from 'cookie';
 
-// Configuração segura do Cloudinary com variáveis de ambiente
-cloudinary.config({ 
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME, 
-  api_key: process.env.CLOUDINARY_API_KEY, 
-  api_secret: process.env.CLOUDINARY_API_SECRET,
-  secure: true
-});
+const JWT_SECRET = process.env.JWT_SECRET;
+
+// Configuração do Cloudinary usando URL
+if (!process.env.CLOUDINARY_URL) {
+  throw new Error('CLOUDINARY_URL não está definida');
+}
+
+// --- Função de Middleware de Segurança ---
+async function validateAuth(req, res) {
+  const cookies = cookie.parse(req.headers.cookie || '');
+  const token = cookies.auth_token;
+
+  if (!token) {
+    res.status(401).json({ error: 'Acesso não autorizado.' });
+    return false;
+  }
+
+  try {
+    verify(token, JWT_SECRET);
+    return true;
+  } catch (error) {
+    res.status(401).json({ error: 'Token inválido ou expirado.' });
+    return false;
+  }
+}
+
+// O cloudinary automaticamente detecta e usa CLOUDINARY_URL
+cloudinary.config({ secure: true });
 
 // Configuração do Multer para processar os arquivos em memória
 const storage = multer.memoryStorage();
@@ -24,18 +48,35 @@ export const config = {
 };
 
 // Função auxiliar para fazer o upload de um buffer para o Cloudinary
-const streamUpload = (buffer) => {
+const streamUpload = (buffer, originalname, projectId) => {
   return new Promise((resolve, reject) => {
+    // Determina se é vídeo baseado na extensão do arquivo
+    const isVideo = /\.(mp4|mov|avi|wmv)$/i.test(originalname);
+    const isImage = /\.(jpe?g|png|gif|webp|svg|bmp|ico|tiff)$/i.test(originalname);
+
+    const uploadOptions = {
+      folder: `portifolio/projects/${projectId}`,
+      resource_type: isVideo ? 'video' : 'image',
+      // Configurações de transformação
+      transformation: isVideo ? [
+        { fetch_format: 'webm' },
+        { quality: 'auto' }
+      ] : isImage ?[
+        { fetch_format: 'webp' },
+        { quality: 'auto' },
+        { flags: 'preserve_transparency' }
+      ] : undefined
+    };
+
     const stream = cloudinary.uploader.upload_stream(
-      { 
-        folder: 'portifolio/projects', // Pasta de destino no Cloudinary
-        resource_type: 'auto' // Detecta se é imagem ou vídeo
-      },
+      uploadOptions,
       (error, result) => {
-        if (result) {
-          resolve(result);
-        } else {
+        if (error) {
+          console.error('Erro no upload:', error);
           reject(error);
+        } else {
+          console.log(`Arquivo convertido com sucesso: ${result.format}`);
+          resolve(result);
         }
       }
     );
@@ -44,27 +85,52 @@ const streamUpload = (buffer) => {
 };
 
 export default async function handler(req, res) {
+  // Verifica método HTTP
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Método não permitido.' });
   }
 
-  // Usamos um truque para rodar o middleware do Multer em uma função serverless
+  // Adicionando a validação de segurança que faltava
+  if (!(await validateAuth(req, res))) {
+    return;
+  }
+
+  // Processar upload
   uploadMiddleware(req, res, async (err) => {
     if (err) {
-      return res.status(500).json({ error: 'Falha no processamento do upload.', details: err.message });
+      console.error('Erro no middleware:', err);
+      return res.status(500).json({ error: 'Falha no processamento do upload', details: err.message });
     }
 
     try {
-      const uploadPromises = req.files.map(file => streamUpload(file.buffer));
+      const { projectId } = req.query;
+      if (!projectId) {
+        return res.status(400).json({ error: 'O ID do projeto é obrigatório para o upload.' });
+      }
+
+      if (!req.files || req.files.length === 0) {
+        return res.status(400).json({ error: 'Nenhum arquivo enviado.' });
+      }
+
+      // --- ALTERAÇÃO 4: Passando o projectId para a função de upload ---
+      const uploadPromises = req.files.map(file => {
+        return streamUpload(file.buffer, file.originalname, projectId);
+      });
+
       const results = await Promise.all(uploadPromises);
-      
-      // Retornamos as URLs seguras dos arquivos que foram enviados
-      const urls = results.map(result => result.secure_url);
-      
-      res.status(200).json({ success: true, urls });
+      const urls = results.map(result => ({
+        url: result.secure_url,
+        format: result.format,
+        resourceType: result.resource_type
+      }));
+
+      return res.status(200).json({ success: true, urls });
     } catch (e) {
-      console.error('Erro ao fazer upload para o Cloudinary:', e);
-      res.status(500).json({ error: `Erro na API de Upload: ${e.message}` });
+      console.error('Erro no upload:', e);
+      return res.status(500).json({
+        error: 'Erro no upload para o Cloudinary',
+        details: e.message
+      });
     }
   });
 }
