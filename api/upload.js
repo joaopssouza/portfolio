@@ -2,7 +2,8 @@
 import { v2 as cloudinary } from 'cloudinary';
 import multer from 'multer';
 import streamifier from 'streamifier';
-import { verify } from 'jsonwebtoken';
+import jwt from 'jsonwebtoken';
+const { verify } = jwt;
 import cookie from 'cookie';
 
 const JWT_SECRET = process.env.JWT_SECRET;
@@ -47,23 +48,24 @@ export const config = {
 };
 
 // Função auxiliar para fazer o upload de um buffer para o Cloudinary
-const streamUpload = (buffer, originalname) => {
+const streamUpload = (buffer, originalname, projectId) => {
   return new Promise((resolve, reject) => {
     // Determina se é vídeo baseado na extensão do arquivo
     const isVideo = /\.(mp4|mov|avi|wmv)$/i.test(originalname);
-    
+    const isImage = /\.(jpe?g|png|gif|webp|svg|bmp|ico|tiff)$/i.test(originalname);
+
     const uploadOptions = {
-      folder: 'portifolio/projects',
+      folder: `portifolio/projects/${projectId}`,
       resource_type: isVideo ? 'video' : 'image',
       // Configurações de transformação
       transformation: isVideo ? [
         { fetch_format: 'webm' },
         { quality: 'auto' }
-      ] : [
+      ] : isImage ?[
         { fetch_format: 'webp' },
         { quality: 'auto' },
         { flags: 'preserve_transparency' }
-      ]
+      ] : undefined
     };
 
     const stream = cloudinary.uploader.upload_stream(
@@ -88,10 +90,9 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Método não permitido.' });
   }
 
-  // Verifica configuração do Cloudinary
-  if (!process.env.CLOUDINARY_URL) {
-    console.error('CLOUDINARY_URL não está definida');
-    return res.status(500).json({ error: 'Erro de configuração do servidor' });
+  // Adicionando a validação de segurança que faltava
+  if (!(await validateAuth(req, res))) {
+    return;
   }
 
   // Processar upload
@@ -102,31 +103,34 @@ export default async function handler(req, res) {
     }
 
     try {
-    if (!req.files || req.files.length === 0) {
-      return res.status(400).json({ error: 'Nenhum arquivo enviado.' });
+      const { projectId } = req.query;
+      if (!projectId) {
+        return res.status(400).json({ error: 'O ID do projeto é obrigatório para o upload.' });
+      }
+
+      if (!req.files || req.files.length === 0) {
+        return res.status(400).json({ error: 'Nenhum arquivo enviado.' });
+      }
+
+      // --- ALTERAÇÃO 4: Passando o projectId para a função de upload ---
+      const uploadPromises = req.files.map(file => {
+        return streamUpload(file.buffer, file.originalname, projectId);
+      });
+
+      const results = await Promise.all(uploadPromises);
+      const urls = results.map(result => ({
+        url: result.secure_url,
+        format: result.format,
+        resourceType: result.resource_type
+      }));
+
+      return res.status(200).json({ success: true, urls });
+    } catch (e) {
+      console.error('Erro no upload:', e);
+      return res.status(500).json({
+        error: 'Erro no upload para o Cloudinary',
+        details: e.message
+      });
     }
-
-    console.log(`Processando ${req.files.length} arquivo(s)`);
-    
-    const uploadPromises = req.files.map(file => {
-      console.log(`Enviando arquivo: ${file.originalname}, tipo: ${file.mimetype}`);
-      return streamUpload(file.buffer, file.originalname);
-    });
-
-    const results = await Promise.all(uploadPromises);
-    const urls = results.map(result => ({
-      url: result.secure_url,
-      format: result.format,
-      resourceType: result.resource_type
-    }));
-    
-    return res.status(200).json({ success: true, urls });
-  } catch (e) {
-    console.error('Erro no upload:', e);
-    return res.status(500).json({ 
-      error: 'Erro no upload para o Cloudinary',
-      details: e.message 
-    });
-  }
   });
 }

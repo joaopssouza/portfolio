@@ -1,6 +1,7 @@
 // /api/deleteMedia.js
 import { v2 as cloudinary } from 'cloudinary';
-import { verify } from 'jsonwebtoken';
+import jwt from 'jsonwebtoken';
+const { verify } = jwt;
 import cookie from 'cookie';
 
 const JWT_SECRET = process.env.JWT_SECRET;

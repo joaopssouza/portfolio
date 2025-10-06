@@ -112,25 +112,31 @@ const ProjectForm = ({ projectToEdit, onSave, onCancel }) => {
           newMediaFiles.forEach(media => formData.append('media', media.file));
 
           // **MUDANÇA IMPORTANTE**: Envia o _id para a API de upload
-          const uploadUrl = `/api/upload?projectId=${projectForUpload._id}`;
+          const uploadUrl = `/api/upload?projectId=${projectDataForSave.id}`;
           const uploadResponse = await fetch(uploadUrl, { method: 'POST', body: formData });
           const uploadData = await uploadResponse.json();
           if (!uploadResponse.ok) throw new Error(uploadData.error || 'Falha no upload.');
 
-          // Adiciona as novas URLs ao objeto do projeto
+          // Processa as URLs retornadas pela API, separando imagens, vídeos e PDF
           uploadData.urls.forEach(fileInfo => {
+            const isPdf = fileInfo.original_filename?.endsWith('.pdf') || fileInfo.format === 'pdf';
+
             if (fileInfo.resourceType === 'video') {
-              projectForUpload.details.videos.push(fileInfo.url);
+              projectDataForSave.details.videos.push(fileInfo.url);
+            } else if (isPdf) {
+              // Se for um PDF, atribui ao campo pdfUrl.
+              // ATENÇÃO: Isso substitui o PDF anterior se o usuário subir mais de um.
+              projectDataForSave.details.pdfUrl = fileInfo.url;
             } else {
-              projectForUpload.details.images.push(fileInfo.url);
+              // Caso contrário, trata como imagem.
+              projectDataForSave.details.images.push(fileInfo.url);
             }
           });
+          // Limpa a fila de arquivos após o sucesso do upload
+          setNewMediaFiles([]);
         }
-
-        // --- ETAPA 3: Salvar o projeto final com as URLs das mídias ---
-        await onSave(projectForUpload);
-
-        setNewMediaFiles([]); // Limpa a fila de upload
+        projectDataForSave.projectUrl = `/projeto/${projectDataForSave.id}`;
+        await onSave(projectDataForSave);
 
       } catch (error) {
         console.error("Erro no processo de salvamento:", error);
@@ -139,13 +145,6 @@ const ProjectForm = ({ projectToEdit, onSave, onCancel }) => {
         setIsSubmitting(false);
       }
     }
-
-    // 2. Define a URL do projeto e envia os dados finais para o componente pai salvar
-    projectDataForSave.projectUrl = `/projeto/${projectDataForSave.id}`;
-
-    await onSave(projectDataForSave);
-
-    setIsSubmitting(false);
   };
 
   const allMediaPreviews = [

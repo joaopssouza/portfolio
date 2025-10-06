@@ -112,7 +112,7 @@ const AdminDashboard = () => {
   };
   
   const renderModalContent = () => (
-    <div style={{ background: '#161b22', padding: '25px', borderRadius: '12px', width: '90vw', maxWidth: '800px' }}>
+    <div>
       <h2 style={{ color: '#58a6ff', marginTop: 0, marginBottom: '20px' }}>
         {selectedProject ? 'Editar Projeto' : 'Adicionar Novo Projeto'}
       </h2>
@@ -133,12 +133,11 @@ const AdminDashboard = () => {
       <header style={styles.header}>
         <h1 style={styles.headerTitle}>Painel de Administração</h1>
         <div>
-          {/* 2. Botão adicionado aqui */}
-          <Link to="/" style={{...styles.button, marginRight: '10px'}}>
-            Voltar ao Início
-          </Link>
           <button onClick={() => openModal()} style={{ ...styles.button, ...styles.buttonPrimary, marginRight: '10px' }}>
             Adicionar Projeto
+          </button>
+          <button onClick={() => navigate(`/`)} style={{...styles.button, marginRight: '10px' }}>
+            Voltar ao Início
           </button>
           <button onClick={handleLogout} style={styles.button}>
             Sair
@@ -172,6 +171,9 @@ const AdminDashboard = () => {
                   <button onClick={() => handleDeleteProject(project)} style={styles.button}>
                     Excluir
                   </button>
+                  <button  onClick={() => navigate(`/projeto/${project.id}`)} style={styles.button}>
+                    Visualizar
+                  </button>
                 </td>
               </tr>
             ))}
@@ -181,7 +183,7 @@ const AdminDashboard = () => {
 
       {isModalOpen && (
         <div className="modal-overlay" onClick={closeModal}>
-            <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{background: '#161b22', padding: '25px', borderRadius: '12px', width: '90vw', maxWidth: '800px', maxHeight: 'max-content' }}>
                 <button className="modal-close" onClick={closeModal}>&times;</button>
                 {renderModalContent()}
             </div>

@@ -7,6 +7,7 @@ import AdminDashboard from './pages/AdminDashboard.jsx';
 import Login from './pages/Login.jsx'; // <-- Importe a página de login
 import ProtectedRoute from './components/ProtectedRoute.jsx'; // <-- Importe a rota protegida
 import { SpeedInsights } from "@vercel/speed-insights/react"
+import { Analytics } from "@vercel/analytics/react"
 
 function App() {
   return (
@@ -27,6 +28,7 @@ function App() {
           }
         />
       </Routes>
+      <Analytics />
       <SpeedInsights />
     </Router>
   );
