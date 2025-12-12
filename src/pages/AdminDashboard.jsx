@@ -66,7 +66,7 @@ const AdminDashboard = () => {
 
   const handleSaveProject = async (projectData) => {
     const isEditing = !!projectData._id;
-    const url = '/api/projects';
+    const url = isEditing ? `/api/projects/${projectData._id}` : '/api/projects';
     const method = isEditing ? 'PUT' : 'POST';
 
     try {

@@ -101,49 +101,45 @@ const ProjectForm = ({ projectToEdit, onSave, onCancel }) => {
     // Cria uma cópia profunda para evitar mutações inesperadas do estado
     let projectDataForSave = JSON.parse(JSON.stringify(project));
 
-    // 1. Lida com o upload de novas mídias
-    if (newMediaFiles.length > 0) {
-      const formData = new FormData();
-      newMediaFiles.forEach(media => formData.append('media', media.file));
+    try {
+      // 1. Lida com o upload de novas mídias
+      if (newMediaFiles.length > 0) {
+        const formData = new FormData();
+        newMediaFiles.forEach(media => formData.append('media', media.file));
 
-      try {
-        if (newMediaFiles.length > 0) {
-          const formData = new FormData();
-          newMediaFiles.forEach(media => formData.append('media', media.file));
+        // **MUDANÇA IMPORTANTE**: Envia o _id para a API de upload
+        const uploadUrl = `/api/upload?projectId=${projectDataForSave.id}`;
+        const uploadResponse = await fetch(uploadUrl, { method: 'POST', body: formData });
+        const uploadData = await uploadResponse.json();
+        if (!uploadResponse.ok) throw new Error(uploadData.error || 'Falha no upload.');
 
-          // **MUDANÇA IMPORTANTE**: Envia o _id para a API de upload
-          const uploadUrl = `/api/upload?projectId=${projectDataForSave.id}`;
-          const uploadResponse = await fetch(uploadUrl, { method: 'POST', body: formData });
-          const uploadData = await uploadResponse.json();
-          if (!uploadResponse.ok) throw new Error(uploadData.error || 'Falha no upload.');
+        // Processa as URLs retornadas pela API, separando imagens, vídeos e PDF
+        uploadData.urls.forEach(fileInfo => {
+          const isPdf = fileInfo.original_filename?.endsWith('.pdf') || fileInfo.format === 'pdf';
 
-          // Processa as URLs retornadas pela API, separando imagens, vídeos e PDF
-          uploadData.urls.forEach(fileInfo => {
-            const isPdf = fileInfo.original_filename?.endsWith('.pdf') || fileInfo.format === 'pdf';
-
-            if (fileInfo.resourceType === 'video') {
-              projectDataForSave.details.videos.push(fileInfo.url);
-            } else if (isPdf) {
-              // Se for um PDF, atribui ao campo pdfUrl.
-              // ATENÇÃO: Isso substitui o PDF anterior se o usuário subir mais de um.
-              projectDataForSave.details.pdfUrl = fileInfo.url;
-            } else {
-              // Caso contrário, trata como imagem.
-              projectDataForSave.details.images.push(fileInfo.url);
-            }
-          });
-          // Limpa a fila de arquivos após o sucesso do upload
-          setNewMediaFiles([]);
-        }
-        projectDataForSave.projectUrl = `/projeto/${projectDataForSave.id}`;
-        await onSave(projectDataForSave);
-
-      } catch (error) {
-        console.error("Erro no processo de salvamento:", error);
-        alert(`Ocorreu um erro: ${error.message}`);
-      } finally {
-        setIsSubmitting(false);
+          if (fileInfo.resourceType === 'video') {
+            projectDataForSave.details.videos.push(fileInfo.url);
+          } else if (isPdf) {
+            // Se for um PDF, atribui ao campo pdfUrl.
+            // ATENÇÃO: Isso substitui o PDF anterior se o usuário subir mais de um.
+            projectDataForSave.details.pdfUrl = fileInfo.url;
+          } else {
+            // Caso contrário, trata como imagem.
+            projectDataForSave.details.images.push(fileInfo.url);
+          }
+        });
+        // Limpa a fila de arquivos após o sucesso do upload
+        setNewMediaFiles([]);
       }
+
+      projectDataForSave.projectUrl = `/projeto/${projectDataForSave.id}`;
+      await onSave(projectDataForSave);
+
+    } catch (error) {
+      console.error("Erro no processo de salvamento:", error);
+      alert(`Ocorreu um erro: ${error.message}`);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
