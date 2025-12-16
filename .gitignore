@@ -26,3 +26,4 @@ server.js
 *.sln
 *.sw?
 .vercel
+.env

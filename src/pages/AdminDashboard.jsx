@@ -66,7 +66,7 @@ const AdminDashboard = () => {
 
   const handleSaveProject = async (projectData) => {
     const isEditing = !!projectData._id;
-    const url = isEditing ? `/api/projects/${projectData._id}` : '/api/projects';
+    const url = '/api/projects';
     const method = isEditing ? 'PUT' : 'POST';
 
     try {
@@ -80,7 +80,7 @@ const AdminDashboard = () => {
       if (!response.ok) {
         throw new Error(result.error || 'Falha ao salvar o projeto.');
       }
-      
+
       closeModal();
       fetchProjects();
       alert(`Projeto ${isEditing ? 'atualizado' : 'criado'} com sucesso!`);
@@ -90,7 +90,7 @@ const AdminDashboard = () => {
       alert(`Erro: ${error.message}`);
     }
   };
-  
+
   const handleDeleteProject = async (project) => {
     const confirmation = prompt(`Para excluir, digite o ID do projeto: "${project.id}"`);
     if (confirmation === project.id) {
@@ -99,7 +99,7 @@ const AdminDashboard = () => {
         const result = await response.json();
 
         if (!response.ok) throw new Error(result.error);
-        
+
         fetchProjects();
         alert('Projeto excluído com sucesso!');
       } catch (error) {
@@ -110,13 +110,13 @@ const AdminDashboard = () => {
       alert('O ID digitado não corresponde. A exclusão foi cancelada.');
     }
   };
-  
+
   const renderModalContent = () => (
     <div>
       <h2 style={{ color: '#58a6ff', marginTop: 0, marginBottom: '20px' }}>
         {selectedProject ? 'Editar Projeto' : 'Adicionar Novo Projeto'}
       </h2>
-      <ProjectForm 
+      <ProjectForm
         projectToEdit={selectedProject}
         onSave={handleSaveProject}
         onCancel={closeModal}
@@ -136,7 +136,7 @@ const AdminDashboard = () => {
           <button onClick={() => openModal()} style={{ ...styles.button, ...styles.buttonPrimary, marginRight: '10px' }}>
             Adicionar Projeto
           </button>
-          <button onClick={() => navigate(`/`)} style={{...styles.button, marginRight: '10px' }}>
+          <button onClick={() => navigate(`/`)} style={{ ...styles.button, marginRight: '10px' }}>
             Voltar ao Início
           </button>
           <button onClick={handleLogout} style={styles.button}>
@@ -148,7 +148,7 @@ const AdminDashboard = () => {
       <main>
         <h2>Meus Projetos</h2>
         <table style={styles.projectTable}>
-           <thead style={styles.tableHead}>
+          <thead style={styles.tableHead}>
             <tr>
               <th style={styles.tableCell}>Título</th>
               <th style={styles.tableCell}>Data de Publicação</th>
@@ -171,7 +171,7 @@ const AdminDashboard = () => {
                   <button onClick={() => handleDeleteProject(project)} style={styles.button}>
                     Excluir
                   </button>
-                  <button  onClick={() => navigate(`/projeto/${project.id}`)} style={styles.button}>
+                  <button onClick={() => navigate(`/projeto/${project.id}`)} style={styles.button}>
                     Visualizar
                   </button>
                 </td>
@@ -183,10 +183,10 @@ const AdminDashboard = () => {
 
       {isModalOpen && (
         <div className="modal-overlay" onClick={closeModal}>
-            <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{background: '#161b22', padding: '25px', borderRadius: '12px', width: '90vw', maxWidth: '800px', maxHeight: 'max-content' }}>
-                <button className="modal-close" onClick={closeModal}>&times;</button>
-                {renderModalContent()}
-            </div>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()} style={{ background: '#161b22', padding: '25px', borderRadius: '12px', width: '90vw', maxWidth: '800px', maxHeight: 'max-content' }}>
+            <button className="modal-close" onClick={closeModal}>&times;</button>
+            {renderModalContent()}
+          </div>
         </div>
       )}
     </div>

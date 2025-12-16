@@ -3,7 +3,7 @@ import React from 'react';
 
 const Footer = () => {
   return (
-    <footer className="site-footer">
+    <footer className="site-footer" style={{ backgroundColor: 'var(--bg-alt)' }}>
       <div className="container">
         <ul className="contact-list">
           {/* Adicione seu telefone aqui */}

@@ -1,8 +1,9 @@
 // src/components/ProjectCard.jsx
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 
 const ProjectCard = ({ project, isLCP }) => {
+  const [isExpanded, setIsExpanded] = useState(false);
   // Adiciona transformações à URL da imagem para otimização
   const getOptimizedImageUrl = (url) => {
     if (!url || !url.includes('cloudinary')) {
@@ -45,7 +46,17 @@ const ProjectCard = ({ project, isLCP }) => {
           <h3 className="card-title">{project.title}</h3>
         </div>
         {project.publicationDate && <time className="card-date">{formattedDate}</time>}
-        <p className="card-text">{project.description}</p>
+        <p className="card-text">
+          {isExpanded ? project.description : project.description?.slice(0, 150)}
+          {project.description?.length > 150 && !isExpanded && (
+            <span
+              onClick={(e) => { e.preventDefault(); setIsExpanded(true); }}
+              style={{ color: 'var(--primary)', cursor: 'pointer', fontWeight: '500' }}
+            >
+              ...mais
+            </span>
+          )}
+        </p>
         <div className="card-actions">
           <Link className="btn" to={project.projectUrl}>Ver página</Link>
           {project.codeUrl && (

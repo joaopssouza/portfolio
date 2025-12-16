@@ -129,8 +129,8 @@ const ProjectDetail = () => {
           <ThemeToggle />
         </div>
       </header>
-      <main>
-        <section className="section">
+      <main >
+        <section className="section" style={{ backgroundColor: 'var(--bg-alt)' }}>
           <div className="container">
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
               <h2>{project.title}</h2>
