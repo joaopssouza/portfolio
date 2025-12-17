@@ -36,32 +36,42 @@ async function validateAuth(req, res) {
 cloudinary.config({ secure: true });
 
 // Configuração do Multer para processar os arquivos em memória
-const storage = multer.memoryStorage();
-const upload = multer({ storage });
-const uploadMiddleware = upload.array('media'); // 'media' é o nome do campo no formulário
-
 // Função para desabilitar o parser padrão do Next.js/Vercel para esta rota
 export const config = {
   api: {
     bodyParser: false,
+    maxDuration: 60, // Aumenta timeout para 60s
   },
 };
+
+// Configuração do Limite de Tamanho do Multer (50MB)
+const storage = multer.memoryStorage();
+const upload = multer({
+  storage,
+  limits: { fileSize: 50 * 1024 * 1024 } // 50MB
+});
+const uploadMiddleware = upload.array('media'); // 'media' é o nome do campo no formulário
 
 // Função auxiliar para fazer o upload de um buffer para o Cloudinary
 const streamUpload = (buffer, originalname, projectId) => {
   return new Promise((resolve, reject) => {
     // Determina se é vídeo baseado na extensão do arquivo
-    const isVideo = /\.(mp4|mov|avi|wmv)$/i.test(originalname);
+    const isVideo = /\.(mp4|mov|avi|wmv|mkv|webm)$/i.test(originalname);
     const isImage = /\.(jpe?g|png|gif|webp|svg|bmp|ico|tiff)$/i.test(originalname);
+
+    // Fallback: se não for detectado como imagem nem video pela extensão,
+    // tentamos inferir, mas idealmente confiamos no mimetype se tivéssemos acesso aqui fácil,
+    // mas 'originalname' é o que temos. Cloudinary 'auto' resolveria, mas temos logica específica.
 
     const uploadOptions = {
       folder: `portifolio/projects/${projectId}`,
-      resource_type: isVideo ? 'video' : 'image',
-      // Configurações de transformação
+      resource_type: isVideo ? 'video' : 'image', // Força 'video' se parecer video
+      // Configurações de transformação e timeouts
+      timeout: 120000,
       transformation: isVideo ? [
         { fetch_format: 'webm' },
         { quality: 'auto' }
-      ] : isImage ?[
+      ] : isImage ? [
         { fetch_format: 'webp' },
         { quality: 'auto' },
         { flags: 'preserve_transparency' }
