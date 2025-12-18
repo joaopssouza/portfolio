@@ -5,6 +5,69 @@ import ProjectCard from '../components/ProjectCard.jsx';
 import Footer from '../components/Footer.jsx';
 import Pagination from '../components/Pagination.jsx';
 
+const expertiseData = [
+  {
+    title: "Frontend & UX/UI",
+    description: "Desenvolvimento FullStack de interfaces modernas, responsivas e focadas na melhor experiência do usuário (UX), garantindo performance e acessibilidade.",
+    tags: ["React & Hooks", "SPA", "Context API", "Responsividade", "SEO"],
+    icons: [
+      { name: "React", src: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/react/react-original.svg" },
+      { name: "TypeScript", src: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/typescript/typescript-original.svg" },
+      { name: "JavaScript", src: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/javascript/javascript-original.svg" },
+      { name: "HTML5", src: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/html5/html5-original.svg" },
+      { name: "CSS3", src: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/css3/css3-original.svg" },
+      { name: "Vite", src: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/vitejs/vitejs-original.svg" },
+    ]
+  },
+  {
+    title: "Backend & API Security",
+    description: "Construção de APIs robustas com documentação clara (Swagger) e padrões de segurança, aplicando arquitetura limpa e escalável.",
+    tags: ["Clean Code", "SOLID", "RESTful API", "JWT Auth", "Swagger UI", "FullStack Mindset"],
+    icons: [
+      { name: "Java", src: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/java/java-original.svg" },
+      { name: "Spring Boot", src: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/spring/spring-original.svg" },
+      { name: "Node.js", src: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/nodejs/nodejs-original.svg" },
+      { name: "Go", src: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/go/go-original-wordmark.svg" },
+      { name: "PHP", src: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/php/php-original.svg" }
+    ]
+  },
+  {
+    title: "Banco de Dados & ORM",
+    description: "Modelagem e persistência de dados eficiente, utilizando ORMs modernos e ferramentas de migração como Flyway para versionamento seguro.",
+    tags: ["Modelagem SQL/NoSQL", "ORM (Hibernate/JPA)", "Flyway Migrations", "Tuning"],
+    icons: [
+      { name: "MySQL", src: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/mysql/mysql-original.svg" },
+      { name: "MongoDB", src: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/mongodb/mongodb-original.svg" },
+      { name: "Python", src: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/python/python-original.svg" }
+    ]
+  },
+  {
+    title: "DevOps, QA & Agilidade",
+    description: "Colaboração ativa com times de QA, gerenciamento ágil de tarefas e implementação de pipelines CI/CD para entregas contínuas.",
+    tags: ["CI/CD Pipelines", "Docker", "Git Flow", "Jira & Trello", "Colaboração QA"],
+    icons: [
+      { name: "Docker", src: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/docker/docker-original.svg" },
+      { name: "Git", src: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/git/git-original.svg" },
+      { name: "GitHub", src: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/github/github-original.svg", className: "invert-on-dark" },
+      { name: "Jira", src: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/jira/jira-original.svg" },
+      { name: "Trello", src: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/trello/trello-plain.svg" },
+    ]
+  },
+  {
+    title: "IA & Base Técnica",
+    description: "Uso de IA generativa (Gemini/ChatGPT) para produtividade e aprendizado em LLMs. Conhecimento sólido em hardware e infraestrutura.",
+    tags: ["IA Generativa", "Interesse em LLMs (OpenAI)", "Hardware Intermediário", "Montagem & Manutenção"],
+    icons: [
+      { name: "Vercel", src: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/vercel/vercel-original.svg", className: "invert-on-dark" },
+      { name: "Postman", src: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/postman/postman-original.svg" },
+      { name: "Linux", src: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/linux/linux-original.svg" }
+    ]
+  }
+];
+
+// Triplicar o array para garantir scroll infinito suave
+const extendedExpertise = [...expertiseData, ...expertiseData, ...expertiseData];
+
 const Home = () => {
   const [projects, setProjects] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
@@ -39,6 +102,66 @@ const Home = () => {
       projectsSection.scrollIntoView({ behavior: 'smooth' });
     }
   };
+
+  // 5. Lógica do Carrossel e Dados
+  const scrollRef = React.useRef(null);
+  const [isPaused, setIsPaused] = useState(false);
+
+  // Auto-scroll effect
+  useEffect(() => {
+    const scrollContainer = scrollRef.current;
+    if (!scrollContainer) return;
+
+    let animationFrameId;
+    // Velocidade do scroll (pixels por frame) - 0.5 é lento e suave
+    const speed = 0.5;
+
+    const animate = () => {
+      if (!isPaused && scrollContainer) {
+        scrollContainer.scrollLeft += speed;
+
+        // Lógica de Loop: 
+        // Quando chegar em 2/3 da largura total (fim do segundo set), volta para 1/3 (inicio do segundo set)
+        // Isso requer que o conteudo seja largo o suficiente.
+        const maxScroll = scrollContainer.scrollWidth;
+        const oneSetWidth = maxScroll / 3;
+
+        if (scrollContainer.scrollLeft >= oneSetWidth * 2) {
+          // Reset imperceptível para o início do segundo set
+          scrollContainer.scrollLeft = oneSetWidth;
+        } else if (scrollContainer.scrollLeft <= 0) {
+          // Caso role manual pra esquerda demais
+          scrollContainer.scrollLeft = oneSetWidth;
+        }
+      }
+      animationFrameId = requestAnimationFrame(animate);
+    };
+
+    // Inicializa a posição no meio (início do segundo set) para ter conteúdo para ambos os lados
+    // Apenas na montagem inicial ou se estiver muito no inicio
+    if (scrollContainer.scrollLeft < 10) {
+      // Pequeno delay para garantir renderização
+      setTimeout(() => {
+        if (scrollContainer) scrollContainer.scrollLeft = scrollContainer.scrollWidth / 3;
+      }, 100);
+    }
+
+    animationFrameId = requestAnimationFrame(animate);
+    return () => cancelAnimationFrame(animationFrameId);
+  }, [isPaused]); // Re-run if paused changes
+
+  const scroll = (direction) => {
+    if (scrollRef.current) {
+      const { current } = scrollRef;
+      const scrollAmount = 340 + 24;
+      if (direction === 'left') {
+        current.scrollBy({ left: -scrollAmount, behavior: 'smooth' });
+      } else {
+        current.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+      }
+    }
+  };
+
   return (
     <>
       <Header />
@@ -78,9 +201,12 @@ const Home = () => {
             <div className="hero-visual">
               <div className="hero-img-container">
                 <img
-                  src="https://res.cloudinary.com/dhqdkgtee/image/upload/w_600,q_auto,f_auto/v1757854155/119147905_jmprxw.jpg"
+                  src="https://res.cloudinary.com/dhqdkgtee/image/upload/w_400,q_auto,f_auto/v1765844242/portifolio/20250731_221751_1_1_ftf2xt.jpg"
                   alt="Foto de João Paulo"
                   className="hero-img"
+                  width="400"
+                  height="400"
+                  fetchPriority="high"
                 />
               </div>
             </div>
@@ -95,6 +221,9 @@ const Home = () => {
                 src="https://res.cloudinary.com/dhqdkgtee/image/upload/w_400,q_auto,f_auto/v1757854155/119147905_jmprxw.jpg"
                 alt="Foto de João Paulo"
                 className="profile-img"
+                width="400"
+                height="400"
+                loading="lazy"
               />
               <div className="sobre-texto">
                 <h2>Sobre <span className="highlight-mim">mim</span></h2>
@@ -106,6 +235,67 @@ const Home = () => {
                 </p>
               </div>
             </div>
+          </div>
+        </section>
+
+        {/* Seção Habilidades (Nova) */}
+        <section id="habilidades" className="section skills-section">
+          <div className="container skills-container">
+            <h2 className="titulo">Minhas <span className="highlight-name">Habilidades</span></h2>
+
+            {/* Definição de Dados de Expertise */}
+            <div className="carousel-wrapper">
+              <button className="carousel-btn prev" onClick={() => scroll('left')} aria-label="Anterior">
+                &#10094;
+              </button>
+
+              <div
+                className="skills-grid-layout"
+                ref={scrollRef}
+                onMouseEnter={() => setIsPaused(true)}
+                onMouseLeave={() => setIsPaused(false)}
+              >
+                {extendedExpertise.map((expertise, idx) => (
+                  <div key={`${idx}-${expertise.title}`} className="expertise-card">
+                    <div className="expertise-header">
+                      {/* Ícone Check simples SVG */}
+                      <svg className="expertise-icon-check" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
+                        <path fillRule="evenodd" d="M2.25 12c0-5.385 4.365-9.75 9.75-9.75s9.75 4.365 9.75 9.75-4.365 9.75-9.75 9.75S2.25 17.385 2.25 12zm13.36-1.814a.75.75 0 10-1.22-.872l-3.236 4.53L9.53 12.22a.75.75 0 00-1.06 1.06l2.25 2.25a.75.75 0 001.14-.094l3.75-5.25z" clipRule="evenodd" />
+                      </svg>
+                      <h3 className="expertise-title">{expertise.title}</h3>
+                    </div>
+
+                    <p className="expertise-desc">{expertise.description}</p>
+
+                    <div className="expertise-tags">
+                      {expertise.tags.map((tag, tIdx) => (
+                        <span key={tIdx} className="tech-tag">{tag}</span>
+                      ))}
+                    </div>
+
+                    <div className="expertise-icons-row">
+                      {expertise.icons.map((icon, iIdx) => (
+                        <img
+                          key={iIdx}
+                          src={icon.src}
+                          alt={icon.name}
+                          title={icon.name}
+                          className={`mini-skill-icon ${icon.className || ''}`}
+                          loading="lazy"
+                          width="28"
+                          height="28"
+                        />
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <button className="carousel-btn next" onClick={() => scroll('right')} aria-label="Próximo">
+                &#10095;
+              </button>
+            </div>
+            {/* Fim dos Cards */}
           </div>
         </section>
 

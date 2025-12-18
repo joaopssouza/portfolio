@@ -1,5 +1,3 @@
-@import url('https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
-
 /* src/index.css */
 /* ========== Reset básico ========== */
 * {
@@ -43,6 +41,11 @@
 
   /* Menu Mobile Background */
   --menu-bg: rgba(22, 27, 34, 0.8);
+  --icon-invert: invert(1);
+}
+
+.invert-on-dark {
+  filter: var(--icon-invert);
 }
 
 /* === Tema LIGHT (complementar) === */
@@ -535,10 +538,15 @@ html[data-theme="light"] .site-header {
 
 .hero-img-container {
   position: relative;
-  width: 70%;
-  max-width: 300vh;
+  width: 400px;
+  height: 400px;
+  max-width: 70vw;
+  /* Garante que não estoure em telas pequenas */
+  max-height: 70vw;
   border-radius: 50%;
   z-index: 1;
+  aspect-ratio: 1 / 1;
+  /* Previne Layout Shift */
 }
 
 /* O "Glow" atrás da imagem */
@@ -607,6 +615,9 @@ html[data-theme="light"] .site-header {
   .hero-img-container {
     width: 280px;
     height: 280px;
+    /* Mantém 280px em mobile para não ocupar tudo, ou use 400px se couber */
+    max-width: 80vw;
+    max-height: 80vw;
   }
 }
 
@@ -900,18 +911,38 @@ html[data-theme="light"] .site-header {
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(0, 0, 0, 0.3);
+  /* Um pouco escuro sempre */
   color: white;
   display: flex;
   align-items: center;
   justify-content: center;
   opacity: 0;
-  transition: opacity 0.3s ease;
-  font-size: 2rem;
+  /* Invisível por padrão (para imagens) */
+  transition: all 0.3s ease;
+  font-size: 3rem;
 }
 
+/* Mostra overlay no hover */
 .card-media-container:hover .overlay {
   opacity: 1;
+  background: rgba(0, 0, 0, 0.5);
+  /* Mais escuro no hover */
+}
+
+/* Para vídeos: Mostra o overlay (com Play) SEMPRE, mas mais suave */
+.card-media-container .overlay.video-overlay {
+  opacity: 1;
+  /* Sempre visível para vídeos */
+  background: rgba(0, 0, 0, 0.3);
+  /* Fundo sempre um pouco escuro */
+}
+
+.card-media-container:hover .overlay.video-overlay {
+  background: rgba(0, 0, 0, 0.6);
+  /* Mais escuro ao passar o mouse */
+  transform: scale(1.05);
+  /* Leve zoom no ícone */
 }
 
 .overlay.play-icon span {
@@ -1061,4 +1092,198 @@ html[data-theme="light"] .site-header {
 .card a:focus,
 .card a:active {
   text-decoration: none !important;
+}
+
+/* Adicione isso ao final do arquivo src/index.css */
+
+/* ===== Seção Habilidades (Expertise Cards) ===== */
+.skills-container {
+  display: flex;
+  flex-direction: column;
+  gap: 48px;
+}
+
+/* Wrapper do Carrossel */
+.carousel-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.carousel-btn {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--primary);
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 1.5rem;
+  transition: all 0.3s ease;
+  z-index: 5;
+  flex-shrink: 0;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  position: absolute;
+  /* Para ficar sobreposto ou nas bordas */
+}
+
+.carousel-btn:hover {
+  background: var(--primary);
+  color: white;
+  /* Contraste garantido */
+  transform: scale(1.1);
+  border-color: var(--primary);
+}
+
+.carousel-btn.prev {
+  left: -20px;
+}
+
+.carousel-btn.next {
+  right: -20px;
+}
+
+@media (max-width: 768px) {
+  .carousel-btn {
+    display: none;
+    /* Em mobile, o touch é melhor que botões */
+  }
+}
+
+.skills-grid-layout {
+  display: flex;
+  gap: 24px;
+  overflow-x: auto;
+  padding: 10px 4px 24px 4px;
+  /* Espaço para sombra */
+  /* scroll-snap-type removido para auto-scroll fluido */
+  /* scroll-snap-type: x mandatory; */
+  scroll-behavior: auto;
+  /* IMPORTANTE: 'auto' para o JS controlar pixel a pixel sem smooth-scroll nativo atrapalhando */
+  -webkit-overflow-scrolling: touch;
+
+  /* Ocultar barra de rolagem (visual mais limpo com setas) */
+  scrollbar-width: none;
+
+  /* Efeito Blur/Fade nas laterais */
+  mask-image: linear-gradient(to right, transparent, black 5%, black 95%, transparent);
+  -webkit-mask-image: linear-gradient(to right, transparent, black 5%, black 95%, transparent);
+}
+
+.skills-grid-layout::-webkit-scrollbar {
+  display: none;
+}
+
+.expertise-card {
+  min-width: 340px;
+  width: 340px;
+  /* Largura fixa */
+  flex-shrink: 0;
+  /* Impede que os cards encolham */
+  /* scroll-snap-align removido */
+  /* scroll-snap-align: center; */
+
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+@media (max-width: 600px) {
+  .expertise-card {
+    min-width: 300px;
+    width: 300px;
+    /* Um pouco menor no mobile */
+  }
+
+  .skills-grid-layout {
+    scroll-padding: 0 20px;
+    /* Padding para snap não colar na borda */
+    padding-left: 20px;
+    padding-right: 20px;
+  }
+}
+
+.expertise-card:hover {
+  transform: translateY(-5px);
+  border-color: var(--primary);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+}
+
+.expertise-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.expertise-icon-check {
+  color: var(--accent);
+  width: 24px;
+  height: 24px;
+}
+
+.expertise-title {
+  font-size: 1.4rem;
+  color: var(--text-const);
+  font-weight: 600;
+}
+
+.expertise-desc {
+  font-size: 0.95rem;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.expertise-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.tech-tag {
+  font-size: 0.8rem;
+  background: rgba(88, 166, 255, 0.1);
+  color: var(--primary);
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-weight: 500;
+  border: 1px solid transparent;
+  transition: all 0.2s ease;
+}
+
+.expertise-card:hover .tech-tag {
+  border-color: rgba(88, 166, 255, 0.3);
+}
+
+.expertise-icons-row {
+  display: flex;
+  gap: 12px;
+  margin-top: auto;
+  /* Empurra para o final */
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+  flex-wrap: wrap;
+}
+
+.mini-skill-icon {
+  width: 28px;
+  height: 28px;
+  object-fit: contain;
+  transition: transform 0.2s;
+  cursor: help;
+}
+
+.mini-skill-icon:hover {
+  transform: scale(1.2);
 }

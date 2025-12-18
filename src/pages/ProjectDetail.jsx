@@ -145,7 +145,7 @@ const ProjectDetail = () => {
                   ) : (
                     <video className="card-video" src={getOptimizedMediaUrl(item.url, 'video')}></video>
                   )}
-                  <div className="overlay">
+                  <div className={`overlay ${item.type === 'video' ? 'video-overlay' : ''}`}>
                     <span>{item.type === 'image' ? '🔎' : '▶'}</span>
                   </div>
                 </div>

@@ -65,17 +65,8 @@ const streamUpload = (buffer, originalname, projectId) => {
 
     const uploadOptions = {
       folder: `portifolio/projects/${projectId}`,
-      resource_type: isVideo ? 'video' : 'image', // Força 'video' se parecer video
-      // Configurações de transformação e timeouts
-      timeout: 120000,
-      transformation: isVideo ? [
-        { fetch_format: 'webm' },
-        { quality: 'auto' }
-      ] : isImage ? [
-        { fetch_format: 'webp' },
-        { quality: 'auto' },
-        { flags: 'preserve_transparency' }
-      ] : undefined
+      resource_type: 'auto', // Deixa o Cloudinary detectar automaticamente
+      timeout: 120000
     };
 
     const stream = cloudinary.uploader.upload_stream(

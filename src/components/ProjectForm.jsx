@@ -26,6 +26,7 @@ const ProjectForm = ({ projectToEdit, onSave, onCancel }) => {
   const [project, setProject] = useState(initialProjectState);
   const [newMediaFiles, setNewMediaFiles] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
 
   useEffect(() => {
     if (projectToEdit) {
@@ -34,6 +35,7 @@ const ProjectForm = ({ projectToEdit, onSave, onCancel }) => {
       setProject(initialProjectState);
     }
     setNewMediaFiles([]);
+    setUploadProgress(0);
   }, [projectToEdit]);
 
   const handleChange = (e) => {
@@ -94,41 +96,120 @@ const ProjectForm = ({ projectToEdit, onSave, onCancel }) => {
     }
   };
 
+  // Função auxiliar para upload direto (Client-Side) com XHR para progresso
+  const uploadFileToCloudinary = (file, projectId, onProgress) => {
+    return new Promise(async (resolve, reject) => {
+      try {
+        const isVideo = file.type.startsWith('video/');
+        const fileType = isVideo ? 'video' : 'image';
+
+        // 1. Obter assinatura
+        const signResponse = await fetch('/api/sign-upload', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            folder: `portifolio/projects/${projectId}`,
+            type: fileType
+          })
+        });
+
+        if (!signResponse.ok) throw new Error('Falha ao obter permissão de upload');
+
+        const { signature, timestamp, apiKey, cloudName, eager } = await signResponse.json();
+
+        // 2. Preparar FormData
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('api_key', apiKey);
+        formData.append('timestamp', timestamp);
+        formData.append('signature', signature);
+        formData.append('folder', `portifolio/projects/${projectId}`);
+
+        if (eager) {
+          formData.append('eager', eager);
+          formData.append('eager_async', 'true');
+        }
+        formData.append('resource_type', 'auto');
+
+        // 3. Upload via XMLHttpRequest para monitorar progresso
+        const xhr = new XMLHttpRequest();
+        const cloudinaryUrl = `https://api.cloudinary.com/v1_1/${cloudName}/${isVideo ? 'video' : 'auto'}/upload`;
+
+        xhr.open('POST', cloudinaryUrl, true);
+        xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+
+        xhr.upload.onprogress = (e) => {
+          if (e.lengthComputable) {
+            const percentComplete = (e.loaded / e.total) * 100;
+            onProgress(percentComplete);
+          }
+        };
+
+        xhr.onload = () => {
+          if (xhr.status >= 200 && xhr.status < 300) {
+            resolve(JSON.parse(xhr.responseText));
+          } else {
+            const err = JSON.parse(xhr.responseText);
+            reject(new Error(err.error?.message || 'Erro no upload para Cloudinary'));
+          }
+        };
+
+        xhr.onerror = () => reject(new Error('Erro de rede no upload'));
+
+        xhr.send(formData);
+
+      } catch (err) {
+        reject(err);
+      }
+    });
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
+    setUploadProgress(0);
 
-    // Cria uma cópia profunda para evitar mutações inesperadas do estado
     let projectDataForSave = JSON.parse(JSON.stringify(project));
 
     try {
-      // 1. Lida com o upload de novas mídias
       if (newMediaFiles.length > 0) {
-        const formData = new FormData();
-        newMediaFiles.forEach(media => formData.append('media', media.file));
+        const targetProjectId = projectDataForSave.id;
 
-        // **MUDANÇA IMPORTANTE**: Envia o _id para a API de upload
-        const uploadUrl = `/api/upload?projectId=${projectDataForSave.id}`;
-        const uploadResponse = await fetch(uploadUrl, { method: 'POST', body: formData });
-        const uploadData = await uploadResponse.json();
-        if (!uploadResponse.ok) throw new Error(uploadData.error || 'Falha no upload.');
+        // Gerenciamento de progresso múltiplo
+        const totalFiles = newMediaFiles.length;
+        const progressValues = new Array(totalFiles).fill(0);
 
-        // Processa as URLs retornadas pela API, separando imagens, vídeos e PDF
-        uploadData.urls.forEach(fileInfo => {
-          const isPdf = fileInfo.original_filename?.endsWith('.pdf') || fileInfo.format === 'pdf';
+        const updateOverallProgress = (index, value) => {
+          progressValues[index] = value;
+          const total = progressValues.reduce((acc, curr) => acc + curr, 0);
+          setUploadProgress(total / totalFiles);
+        };
 
-          if (fileInfo.resourceType === 'video') {
-            projectDataForSave.details.videos.push(fileInfo.url);
+        const uploadPromises = newMediaFiles.map((media, index) =>
+          uploadFileToCloudinary(media.file, targetProjectId, (percent) => updateOverallProgress(index, percent))
+        );
+
+        const uploadResults = await Promise.all(uploadPromises);
+
+        // Preenche info no form apenas após sucesso
+        setUploadProgress(100); // Garante 100% no final
+
+        uploadResults.forEach(data => {
+          const secureUrl = data.secure_url;
+          const isPdf = data.format === 'pdf' || data.original_filename?.endsWith('.pdf');
+          const isVideo = data.resource_type === 'video';
+
+          if (isVideo) {
+            // Salva a versão .webm que foi gerada pela transformação eager
+            const webmUrl = secureUrl.replace(/\.[^/.]+$/, ".webm");
+            projectDataForSave.details.videos.push(webmUrl);
           } else if (isPdf) {
-            // Se for um PDF, atribui ao campo pdfUrl.
-            // ATENÇÃO: Isso substitui o PDF anterior se o usuário subir mais de um.
-            projectDataForSave.details.pdfUrl = fileInfo.url;
+            projectDataForSave.details.pdfUrl = secureUrl;
           } else {
-            // Caso contrário, trata como imagem.
-            projectDataForSave.details.images.push(fileInfo.url);
+            projectDataForSave.details.images.push(secureUrl);
           }
         });
-        // Limpa a fila de arquivos após o sucesso do upload
+
         setNewMediaFiles([]);
       }
 
@@ -136,8 +217,9 @@ const ProjectForm = ({ projectToEdit, onSave, onCancel }) => {
       await onSave(projectDataForSave);
 
     } catch (error) {
-      console.error("Erro no processo de salvamento:", error);
+      console.error("Erro processando projeto:", error);
       alert(`Ocorreu um erro: ${error.message}`);
+      setUploadProgress(0);
     } finally {
       setIsSubmitting(false);
     }
@@ -194,11 +276,29 @@ const ProjectForm = ({ projectToEdit, onSave, onCancel }) => {
         </div>
       </div>
 
-      <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end', marginTop: '20px' }}>
-        <button type="button" onClick={onCancel} style={{ ...styles.button, backgroundColor: '#30363d', color: '#c9d1d9' }}>Cancelar</button>
-        <button type="submit" style={styles.button} disabled={isSubmitting}>
-          {isSubmitting ? 'Salvando...' : 'Salvar Projeto'}
-        </button>
+      <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end', marginTop: '20px', flexDirection: 'column' }}>
+        {isSubmitting && (
+          <div style={{ width: '100%', background: '#21262d', borderRadius: '4px', overflow: 'hidden', height: '10px' }}>
+            <div
+              style={{
+                width: `${uploadProgress}%`,
+                background: '#58a6ff',
+                height: '100%',
+                transition: 'width 0.2s ease'
+              }}
+            />
+            <div style={{ color: '#8b949e', fontSize: '0.8rem', textAlign: 'right', marginTop: '4px' }}>
+              {Math.round(uploadProgress)}%
+            </div>
+          </div>
+        )}
+
+        <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
+          <button type="button" onClick={onCancel} style={{ ...styles.button, backgroundColor: '#30363d', color: '#c9d1d9' }}>Cancelar</button>
+          <button type="submit" style={styles.button} disabled={isSubmitting}>
+            {isSubmitting ? 'Enviando...' : 'Salvar Projeto'}
+          </button>
+        </div>
       </div>
     </form>
   );

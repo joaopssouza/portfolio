@@ -57,8 +57,9 @@ const Header = () => {
         </button>
 
         <nav className={`nav ${isMenuOpen ? 'nav-open' : ''}`}>
-          <a href="#home" className="nav-link active" onClick={(e) => handleNavClick(e, '#home')}>Home</a>
+          <a href="#home" className="nav-link" onClick={(e) => handleNavClick(e, '#home')}>Home</a>
           <a href="#sobre" className="nav-link" onClick={(e) => handleNavClick(e, '#sobre')}>Sobre</a>
+          <a href="#habilidades" className="nav-link" onClick={(e) => handleNavClick(e, '#habilidades')}>Habilidades</a>
           <a href="#projetos" className="nav-link" onClick={(e) => handleNavClick(e, '#projetos')}>Projetos</a>
           <a href="#contato" className="nav-link" onClick={(e) => handleNavClick(e, '#contato')}>Contato</a>
           <a href="/admin/dashboard" className="nav-link" onClick={() => setIsMenuOpen(false)}>Painel de Controle</a>
