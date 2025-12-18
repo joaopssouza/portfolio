@@ -33,6 +33,7 @@ const ProjectCard = ({ project, isLCP }) => {
               alt={`Prévia ${project.title}`}
               fetchPriority={isLCP ? "high" : "auto"}
               className="card-miniature"
+              crossOrigin="anonymous"
             />
           ) : (
             <div className="card-placeholder">

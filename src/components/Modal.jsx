@@ -28,7 +28,7 @@ const Modal = ({ isOpen, onClose, media, onNext, onPrevious, hasNext, hasPreviou
       setImgDimensions({ naturalWidth, naturalHeight, displayWidth: width, displayHeight: height });
     }
   };
-  
+
   useEffect(() => {
     setImgDimensions({ naturalWidth: 0, naturalHeight: 0, displayWidth: 0, displayHeight: 0 });
   }, [media]);
@@ -48,7 +48,7 @@ const Modal = ({ isOpen, onClose, media, onNext, onPrevious, hasNext, hasPreviou
   // Função para otimizar a URL da mídia para o Modal
   const getOptimizedMediaUrl = (url, type) => {
     if (!url || !url.includes('cloudinary')) return url;
-    
+
     // Transformações para imagens em alta resolução (largura, qualidade e formato)
     const imageTransformations = 'w_1600,q_auto,f_auto';
     // Transformações para vídeos (qualidade e formato)
@@ -58,7 +58,7 @@ const Modal = ({ isOpen, onClose, media, onNext, onPrevious, hasNext, hasPreviou
       return url.replace('/upload/', `/upload/${imageTransformations}/`);
     }
     if (type === 'video') {
-        return url.replace('/upload/', `/upload/${videoTransformations}/`);
+      return url.replace('/upload/', `/upload/${videoTransformations}/`);
     }
     return url;
   };
@@ -86,12 +86,12 @@ const Modal = ({ isOpen, onClose, media, onNext, onPrevious, hasNext, hasPreviou
   return (
     <div className="modal-overlay" onClick={onClose}>
       {hasPrevious && <button className="modal-nav prev" onClick={(e) => { e.stopPropagation(); onPrevious(); }}>&#10094;</button>}
-      
+
       <div className="modal-content" onClick={(e) => e.stopPropagation()}>
         <button className="modal-close" onClick={onClose}>&times;</button>
-        
+
         {media?.type === 'image' && (
-          <div 
+          <div
             className="image-zoom-container"
             onMouseEnter={handleMouseEnter}
             onMouseLeave={handleMouseLeave}
@@ -102,13 +102,14 @@ const Modal = ({ isOpen, onClose, media, onNext, onPrevious, hasNext, hasPreviou
               src={optimizedUrl}
               alt="Visualização ampliada"
               onLoad={handleImageLoad}
+              crossOrigin="anonymous"
             />
             <div className="magnifying-glass" style={magnifierStyle}></div>
           </div>
         )}
-        
+
         {media?.type === 'video' && (
-          <video key={optimizedUrl} className="modal-video" src={optimizedUrl} controls autoPlay />
+          <video key={optimizedUrl} className="modal-video" src={optimizedUrl} controls autoPlay crossOrigin="anonymous" />
         )}
       </div>
 

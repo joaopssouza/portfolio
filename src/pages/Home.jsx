@@ -37,6 +37,7 @@ const expertiseData = [
     tags: ["Modelagem SQL/NoSQL", "ORM (Hibernate/JPA)", "Flyway Migrations", "Tuning"],
     icons: [
       { name: "MySQL", src: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/mysql/mysql-original.svg" },
+      { name: "PostgreSQL", src: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/postgresql/postgresql-original.svg" },
       { name: "MongoDB", src: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/mongodb/mongodb-original.svg" },
       { name: "Python", src: "https://cdn.jsdelivr.net/gh/devicons/devicon/icons/python/python-original.svg" }
     ]
@@ -106,6 +107,9 @@ const Home = () => {
   // 5. Lógica do Carrossel e Dados
   const scrollRef = React.useRef(null);
   const [isPaused, setIsPaused] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
+  const [startX, setStartX] = useState(0);
+  const [scrollLeftState, setScrollLeftState] = useState(0);
 
   // Auto-scroll effect
   useEffect(() => {
@@ -113,26 +117,31 @@ const Home = () => {
     if (!scrollContainer) return;
 
     let animationFrameId;
-    // Velocidade do scroll (pixels por frame) - 0.5 é lento e suave
-    const speed = 0.5;
+    // Velocidade do scroll (pixels por frame)
+    const speed = 0.2;
+
+    // Acumulador para posição precisa (float) para permitir velocidades < 1px
+    let preciseScroll = scrollContainer.scrollLeft;
 
     const animate = () => {
       if (!isPaused && scrollContainer) {
-        scrollContainer.scrollLeft += speed;
+        preciseScroll += speed;
+        scrollContainer.scrollLeft = preciseScroll;
 
         // Lógica de Loop: 
-        // Quando chegar em 2/3 da largura total (fim do segundo set), volta para 1/3 (inicio do segundo set)
-        // Isso requer que o conteudo seja largo o suficiente.
         const maxScroll = scrollContainer.scrollWidth;
         const oneSetWidth = maxScroll / 3;
 
         if (scrollContainer.scrollLeft >= oneSetWidth * 2) {
-          // Reset imperceptível para o início do segundo set
-          scrollContainer.scrollLeft = oneSetWidth;
+          preciseScroll = oneSetWidth;
+          scrollContainer.scrollLeft = preciseScroll;
         } else if (scrollContainer.scrollLeft <= 0) {
-          // Caso role manual pra esquerda demais
-          scrollContainer.scrollLeft = oneSetWidth;
+          preciseScroll = oneSetWidth;
+          scrollContainer.scrollLeft = preciseScroll;
         }
+      } else if (scrollContainer) {
+        // Sincroniza a posição precisa quando pausado (ex: durante o drag)
+        preciseScroll = scrollContainer.scrollLeft;
       }
       animationFrameId = requestAnimationFrame(animate);
     };
@@ -150,16 +159,51 @@ const Home = () => {
     return () => cancelAnimationFrame(animationFrameId);
   }, [isPaused]); // Re-run if paused changes
 
-  const scroll = (direction) => {
-    if (scrollRef.current) {
-      const { current } = scrollRef;
-      const scrollAmount = 340 + 24;
-      if (direction === 'left') {
-        current.scrollBy({ left: -scrollAmount, behavior: 'smooth' });
-      } else {
-        current.scrollBy({ left: scrollAmount, behavior: 'smooth' });
-      }
-    }
+
+
+  // Handlers para Drag (Mouse)
+  const handleMouseDown = (e) => {
+    setIsDragging(true);
+    // Pausa mas não via state de hover apenas, o mousedown já garante interação
+    // Vamos manter o isPaused=true do onMouseEnter que já deve ter disparado antes.
+    setStartX(e.pageX - scrollRef.current.offsetLeft);
+    setScrollLeftState(scrollRef.current.scrollLeft);
+  };
+
+  const handleMouseUp = () => {
+    setIsDragging(false);
+  };
+
+  const handleMouseLeave = () => {
+    setIsDragging(false);
+    setIsPaused(false);
+  };
+
+  const handleMouseMove = (e) => {
+    if (!isDragging) return;
+    e.preventDefault();
+    const x = e.pageX - scrollRef.current.offsetLeft;
+    const walk = (x - startX) * 2; // Multiplicador de velocidade do arraste
+    scrollRef.current.scrollLeft = scrollLeftState - walk;
+  };
+
+  // Handlers para Touch (Mobile)
+  const handleTouchStart = (e) => {
+    setIsDragging(true);
+    setStartX(e.touches[0].pageX - scrollRef.current.offsetLeft);
+    setScrollLeftState(scrollRef.current.scrollLeft);
+  };
+
+  const handleTouchMove = (e) => {
+    if (!isDragging) return;
+    // Não prevenir default aqui para permitir scroll vertical da página se o movimento for mais vertical
+    const x = e.touches[0].pageX - scrollRef.current.offsetLeft;
+    const walk = (x - startX) * 2;
+    scrollRef.current.scrollLeft = scrollLeftState - walk;
+  };
+
+  const handleTouchEnd = () => {
+    setIsDragging(false);
   };
 
   return (
@@ -202,11 +246,18 @@ const Home = () => {
               <div className="hero-img-container">
                 <img
                   src="https://res.cloudinary.com/dhqdkgtee/image/upload/w_400,q_auto,f_auto/v1765844242/portifolio/20250731_221751_1_1_ftf2xt.jpg"
+                  srcSet="
+                    https://res.cloudinary.com/dhqdkgtee/image/upload/w_280,q_auto,f_auto/v1765844242/portifolio/20250731_221751_1_1_ftf2xt.jpg 280w,
+                    https://res.cloudinary.com/dhqdkgtee/image/upload/w_400,q_auto,f_auto/v1765844242/portifolio/20250731_221751_1_1_ftf2xt.jpg 400w,
+                    https://res.cloudinary.com/dhqdkgtee/image/upload/w_800,q_auto,f_auto/v1765844242/portifolio/20250731_221751_1_1_ftf2xt.jpg 800w
+                  "
+                  sizes="(max-width: 900px) 280px, 400px"
                   alt="Foto de João Paulo"
                   className="hero-img"
                   width="400"
                   height="400"
                   fetchPriority="high"
+                  crossOrigin="anonymous"
                 />
               </div>
             </div>
@@ -219,11 +270,18 @@ const Home = () => {
             <div className="sobre-conteudo">
               <img
                 src="https://res.cloudinary.com/dhqdkgtee/image/upload/w_400,q_auto,f_auto/v1757854155/119147905_jmprxw.jpg"
+                srcSet="
+                  https://res.cloudinary.com/dhqdkgtee/image/upload/w_280,q_auto,f_auto/v1757854155/119147905_jmprxw.jpg 280w,
+                  https://res.cloudinary.com/dhqdkgtee/image/upload/w_400,q_auto,f_auto/v1757854155/119147905_jmprxw.jpg 400w,
+                  https://res.cloudinary.com/dhqdkgtee/image/upload/w_800,q_auto,f_auto/v1757854155/119147905_jmprxw.jpg 800w
+                "
+                sizes="(max-width: 768px) 280px, 280px"
                 alt="Foto de João Paulo"
                 className="profile-img"
                 width="400"
                 height="400"
                 loading="lazy"
+                crossOrigin="anonymous"
               />
               <div className="sobre-texto">
                 <h2>Sobre <span className="highlight-mim">mim</span></h2>
@@ -245,15 +303,20 @@ const Home = () => {
 
             {/* Definição de Dados de Expertise */}
             <div className="carousel-wrapper">
-              <button className="carousel-btn prev" onClick={() => scroll('left')} aria-label="Anterior">
-                &#10094;
-              </button>
+
 
               <div
                 className="skills-grid-layout"
                 ref={scrollRef}
                 onMouseEnter={() => setIsPaused(true)}
-                onMouseLeave={() => setIsPaused(false)}
+                onMouseLeave={handleMouseLeave}
+                onMouseDown={handleMouseDown}
+                onMouseUp={handleMouseUp}
+                onMouseMove={handleMouseMove}
+                onTouchStart={handleTouchStart}
+                onTouchMove={handleTouchMove}
+                onTouchEnd={handleTouchEnd}
+                style={{ cursor: isDragging ? 'grabbing' : 'grab' }}
               >
                 {extendedExpertise.map((expertise, idx) => (
                   <div key={`${idx}-${expertise.title}`} className="expertise-card">
@@ -284,6 +347,7 @@ const Home = () => {
                           loading="lazy"
                           width="28"
                           height="28"
+                          crossOrigin="anonymous"
                         />
                       ))}
                     </div>
@@ -291,9 +355,7 @@ const Home = () => {
                 ))}
               </div>
 
-              <button className="carousel-btn next" onClick={() => scroll('right')} aria-label="Próximo">
-                &#10095;
-              </button>
+
             </div>
             {/* Fim dos Cards */}
           </div>

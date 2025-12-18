@@ -61,6 +61,7 @@ const Login = () => {
             placeholder="Usuário"
             style={styles.input}
             required
+            autoComplete="username"
           />
           <input
             type="password"
@@ -69,12 +70,13 @@ const Login = () => {
             placeholder="Senha"
             style={styles.input}
             required
+            autoComplete="current-password"
           />
           <button type="submit" style={styles.button}>Entrar</button>
           {error && <p style={styles.error}>{error}</p>}
         </form>
         {/* 3. Link adicionado aqui */}
-        <Link to="/" style={styles.backLink} onMouseOver={e => e.currentTarget.style.color='#58a6ff'} onMouseOut={e => e.currentTarget.style.color='#8b949e'}>
+        <Link to="/" style={styles.backLink} onMouseOver={e => e.currentTarget.style.color = '#58a6ff'} onMouseOut={e => e.currentTarget.style.color = '#8b949e'}>
           ← Voltar ao Início
         </Link>
       </div>

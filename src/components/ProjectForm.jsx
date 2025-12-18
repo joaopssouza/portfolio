@@ -262,7 +262,7 @@ const ProjectForm = ({ projectToEdit, onSave, onCancel }) => {
         <div style={styles.mediaPreviewContainer}>
           {allMediaPreviews.map(media => (
             <div key={media.url} style={styles.mediaThumbnail}>
-              {media.type === 'image' && <img src={media.url} alt="Preview" style={styles.media} />}
+              {media.type === 'image' && <img src={media.url} alt="Preview" style={styles.media} crossOrigin="anonymous" />}
               {media.type === 'video' && <video src={media.url} style={styles.media} />}
               {media.type === 'pdf' && (
                 <div style={{ ...styles.mediaThumbnail, ...styles.pdfThumbnail }}>

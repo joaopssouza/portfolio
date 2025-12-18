@@ -141,9 +141,9 @@ const ProjectDetail = () => {
               {media.map((item, index) => (
                 <div key={index} className="card-media-container" onClick={() => openModal(index)}>
                   {item.type === 'image' ? (
-                    <img className="card-img" src={getOptimizedMediaUrl(item.url, 'image')} alt={`Mídia ${index + 1} do projeto`} />
+                    <img className="card-img" src={getOptimizedMediaUrl(item.url, 'image')} alt={`Mídia ${index + 1} do projeto`} crossOrigin="anonymous" />
                   ) : (
-                    <video className="card-video" src={getOptimizedMediaUrl(item.url, 'video')}></video>
+                    <video className="card-video" src={getOptimizedMediaUrl(item.url, 'video')} crossOrigin="anonymous"></video>
                   )}
                   <div className={`overlay ${item.type === 'video' ? 'video-overlay' : ''}`}>
                     <span>{item.type === 'image' ? '🔎' : '▶'}</span>

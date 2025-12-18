@@ -1,7 +1,7 @@
 // /api/upload.js
 import { v2 as cloudinary } from 'cloudinary';
 import multer from 'multer';
-import streamifier from 'streamifier';
+import { Readable } from 'stream';
 import jwt from 'jsonwebtoken';
 const { verify } = jwt;
 import cookie from 'cookie';
@@ -81,7 +81,7 @@ const streamUpload = (buffer, originalname, projectId) => {
         }
       }
     );
-    streamifier.createReadStream(buffer).pipe(stream);
+    Readable.from(buffer).pipe(stream);
   });
 };
 
